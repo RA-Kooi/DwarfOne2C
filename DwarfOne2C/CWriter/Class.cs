@@ -68,10 +68,11 @@ public partial class CWriter
 			child.sibling != Tag.NoSibling;
 			child = allTags[IDToIndex[child.sibling]])
 		{
+			// This is perhaps not needed anymore...
 			// Work around weirdness where anonymous structs are generated
 			// with members (padding) and functions (padding) as children.
-			if(child.tagType == TagType.Member
-			   || child.tagType == TagType.TypeDef)
+			/*if(child.tagType == TagType.Member
+			   || child.tagType == TagType.TypeDef)*/
 				children.Add(child);
 		}
 
@@ -119,13 +120,22 @@ public partial class CWriter
 		{
 			child = children[i];
 
-			code.AddRange(
-				TagDispatcher(
+			List<string> innerCode = TagDispatcher(
 					allTags,
 					allMemberFuncs,
 					IDToIndex,
 					child,
-					depth + 1));
+					depth + 1);
+
+			if(innerCode.Count > 0)
+			{
+				innerCode.RemoveAt(innerCode.Count - 1);
+
+				code.Add("");
+				code.AddRange(innerCode);
+
+				continue;
+			}
 
 			if(child.accessLevel != accessLevel
 			   && child.accessLevel != AccessLevel.None)
