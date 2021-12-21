@@ -22,12 +22,12 @@ As an example we will take a fictional game called YourGame which has an elf wit
 
 ```sh
 dwarfone YourGame.elf > YourGame-dwarf.txt
-dotnet DwarfOne2C.dll --list-files YourGame-dwarf.txt
+DwarfOne2C.exe --list-files YourGame-dwarf.txt
 
 # Pick a file from the output
 
 # Output in current folder, add path to output folder at the end if you want it to output somewhere else
-dotnet DwarfOne2C.dll YourGame-dwarf.txt C:\YourGame\ C:\YourGame\src\main.cpp
+DwarfOne2C.exe YourGame-dwarf.txt C:\YourGame\ C:\YourGame\src\main.cpp
 ```
 
 If you're lucky and it didn't crash, you should now have a file called `main.cpp` in `.\src\`
