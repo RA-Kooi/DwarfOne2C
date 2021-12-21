@@ -165,6 +165,7 @@ public partial class CompilationUnit: Tag
 					&& !ParseName(line, tag)
 					&& !ParseTypes(line, tag)
 					&& !ParseLoUser(line, tag)
+					&& !ParseAccessLevel(line, tag)
 					&& !ParseAtMember(line, tag))
 				Console.WriteLine("Unknown attribute: " + line + " @" + current);
 		}

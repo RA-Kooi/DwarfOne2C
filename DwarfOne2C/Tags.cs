@@ -46,6 +46,7 @@ public class Tag
 		TypeDef, // In reverse order
 		Union,
 		Padding, // Local variable OR member...
+		MemberFunc,
 	}
 
 	public TagType tagType;
