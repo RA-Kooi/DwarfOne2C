@@ -252,8 +252,6 @@ public partial class CompilationUnit: Tag
 			}
 		}
 
-		// Fixup TAG_padding being member variables, global variables, and
-		// global functions at the same time...
 		void Recurse(Tag parent, int depth)
 		{
 			if(parent.firstChild == -1)
@@ -263,6 +261,8 @@ public partial class CompilationUnit: Tag
 				child.sibling != Tag.NoSibling;
 				child = allTags[IDToIndex[child.sibling]])
 			{
+				// Fixup TAG_padding being member variables, global variables,
+				// and global functions at the same time...
 				if(child.tagType == TagType.Padding)
 				{
 					if(depth == 0)
@@ -278,6 +278,19 @@ public partial class CompilationUnit: Tag
 					{
 						child.sibling = Tag.NoSibling;
 						break;
+					}
+				}
+				else if(child.tagType == TagType.GlobalFunc)
+				{
+					if(depth > 0)
+					{
+						// Remove staticness from functions that are
+						// not top level
+						child.isStatic = false;
+
+						// It is also a class/struct member function
+						// in this case
+						child.tagType = TagType.MemberFunc;
 					}
 				}
 

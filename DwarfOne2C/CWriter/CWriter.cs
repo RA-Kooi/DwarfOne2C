@@ -174,6 +174,11 @@ public partial class CWriter
 		case TagType.Enum:
 			code.AddRange(GenerateEnum(allTags, IDToIndex, current, depth));
 		break;
+		case TagType.MemberFunc:
+		{
+			code.AddRange(
+				GenerateMemberFunction(allTags, IDToIndex, current, depth));
+		} break;
 		}
 
 		return code;

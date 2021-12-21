@@ -105,5 +105,34 @@ public partial class CWriter
 
 		return code;
 	}
+
+	private static List<string> GenerateMemberFunction(
+		List<Tag> allTags,
+		Dictionary<int, int> IDToIndex,
+		Tag current,
+		int depth)
+	{
+		List<string> code = new();
+
+		string tabs = new('\t', depth);
+
+		if(current.comment != null)
+			code.Add(tabs + "// " + current.comment);
+
+		Tag referenced = allTags[IDToIndex[current.typeID]];
+
+		// Reforge the tag to generate properly.
+		referenced.tagType = TagType.GlobalFunc;
+		referenced.name = current.name;
+
+		code.AddRange(
+			GenerateFunction(
+				allTags,
+				IDToIndex,
+				referenced,
+				depth));
+
+		return code;
+	}
 }
 }
