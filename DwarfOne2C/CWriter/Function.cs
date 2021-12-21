@@ -37,19 +37,25 @@ public partial class CWriter
 			bool firstLocal = true;
 			bool hasParams = false;
 
+			int i = 0;
+
 			for(Tag child = allTags[IDToIndex[current.firstChild]];
 				child.sibling != Tag.NoSibling;
-				child = allTags[IDToIndex[child.sibling]])
+				child = allTags[IDToIndex[child.sibling]], ++i)
 			{
 				if(child.name == "this")
 					continue;
 
-				(part1, part2) = GetType(allTags, IDToIndex, child);
+				string name = child.name != null
+					? child.name
+					: $"unknown{i}";
+
+				(string pPart1, string pPart2) = GetType(allTags, IDToIndex, child);
 
 				if(child.tagType == TagType.Param)
 				{
 					hasParams = true;
-					line += part1 + child.name + part2 + ", ";
+					line += pPart1 + name + pPart2 + ", ";
 				}
 				else if(child.tagType == TagType.LocalVar)
 				{
@@ -58,7 +64,7 @@ public partial class CWriter
 						if(hasParams)
 							line = line.Remove(line.Length - 2, 2);
 
-						line += ")" + part2;
+						line += ")" + pPart2;
 						code.Add(line);
 						code.Add(tabs + "{");
 						firstLocal = false;
@@ -67,9 +73,9 @@ public partial class CWriter
 					line = string.Format(
 						"{0}\t{1}{2}{3};",
 						tabs,
-						part1,
+						pPart1,
 						child.name,
-						part2);
+						pPart2);
 
 					code.Add(line);
 				}
