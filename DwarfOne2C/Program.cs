@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace DwarfOne2C
 {
@@ -41,33 +42,53 @@ class Program
 
 	static int Main(string[] args)
 	{
-		if(args.Length < 1
-		   && (args.Length < 2 && args[0].ToLower() == "--list-files")
-		   && args.Length < 3
-		   && args.Length > 4)
+		List<string> arguments = new(args);
+
+		if(arguments.Count > 0 && arguments[0].ToLower().Contains("dwarfone2c"))
+			arguments.RemoveAt(0);
+
+		if(arguments.Count < 1)
+		{
+			Usage();
+			return 1;
+		}
+		else if(arguments.Count < 2 && arguments[0].ToLower() == "--list-files")
+		{
+			Usage();
+			return 1;
+		}
+		else if((arguments.Count < 3 || arguments.Count > 4)
+				&& !(arguments[0].ToLower() == "--help")
+				&& !(arguments[0].ToLower() == "--list-files"))
 		{
 			Usage();
 			return 1;
 		}
 
-		if(args[0].ToLower() == "--help")
+		if(arguments[0].ToLower() == "--help")
 		{
 			Help();
 			return 1;
 		}
 
-		string fileName = args[0];
-		string fullPath = Path.GetFullPath(fileName);
+		string fileName = null;
+		string fullPath = null;
 
-		if(args[0].ToLower() == "--list-files")
+		if(arguments[0].ToLower() == "--list-files")
 		{
+			fileName = arguments[1];
+			fullPath = Path.GetFullPath(fileName);
+
 			ListFiles(fullPath);
 			return 0;
 		}
 
+		fileName = arguments[0];
+		fullPath = Path.GetFullPath(fileName);
+
 		string outputDirectory = null;
-		if(args.Length > 3)
-			outputDirectory = Path.GetFullPath(args[3]);
+		if(arguments.Count > 3)
+			outputDirectory = Path.GetFullPath(arguments[3]);
 		else
 			outputDirectory = Path.GetDirectoryName(fullPath);
 
@@ -100,8 +121,8 @@ class Program
 			return 1;
 		}
 
-		string splitPath = args[1];
-		string cuPath = args[2];
+		string splitPath = arguments[1];
+		string cuPath = arguments[2];
 
 		DumpParser dumpParser = new DumpParser(fullPath);
 
