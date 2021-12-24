@@ -106,9 +106,8 @@ public class Tag
 	// Typedef
 	public bool isPointer = false; // Size helper
 	public bool isReference = false; // size helper
-	
+
 	// ArrayType
-	// 
 	public bool isMultidimArray = false;
 	public List<int> arrayDimLengths = new();
 
