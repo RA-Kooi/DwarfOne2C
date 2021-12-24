@@ -125,13 +125,16 @@ public partial class CompilationUnit: Tag
 					case "TAG_subroutine":
 					{
 						// (static) function local to CU
-						allTags.Add(
-							ParseFunction(
+						Tag tag = ParseFunction(
 								lines,
 								ref current,
 								ID,
 								sibling,
-								Tag.TagType.CULocalFunc));
+								Tag.TagType.CULocalFunc);
+
+						tag.isStatic = true;
+
+						allTags.Add(tag);
 					} break;
 					case "TAG_subroutine_type":
 					{
