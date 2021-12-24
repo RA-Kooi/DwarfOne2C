@@ -25,14 +25,11 @@ public partial class CWriter
 
 		if(current.firstChild == -1)
 		{
-			code.Add(tabs + "{");
 			code.Add(tabs + "};");
 			code.Add("");
 
 			return code;
 		}
-
-		code.Add(tabs + "{");
 
 		for(Tag child = allTags[IDToIndex[current.firstChild]];
 			child.sibling != Tag.NoSibling;
