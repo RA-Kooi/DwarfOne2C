@@ -89,11 +89,26 @@ public partial class CWriter
 			type += GetModifiers(allTags, IDToIndex, current);
 		}
 
-		part2 += string.Format(
-			"[{0}]",
-			current.length < 0
-				? ""
-				: "" + (current.length + 1));
+		if (current.isMultidimArray)
+		{
+			foreach (int len in current.arrayDimLengths)
+			{
+				part2 += string.Format(
+					"[{0}]",
+					len < 0
+						? ""
+						: "" + (len + 1));
+			}
+		}
+		else
+		{
+			part2 += string.Format(
+				"[{0}]",
+				current.length < 0
+					? ""
+					: "" + (current.length + 1));
+		}
+		
 
 		return (type, part2);
 	}

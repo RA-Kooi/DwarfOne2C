@@ -1,3 +1,4 @@
+using System.Text;
 using System;
 using System.Text.RegularExpressions;
 
@@ -92,24 +93,64 @@ public partial class CompilationUnit: Tag
 
 			if(line.StartsWith("AT_subscr_data"))
 			{
-				if(!line.Contains("FT_long"))
+				Regex regex;
+				int count = 0;
+				string searchFull = @"(?>AT_subscr_data\(<\d+>";
+				if(line.Contains("FT_long["))
+				{
+					string searchStr = @"FT_long\[0:(\d+)\], ";
+					count = Regex.Matches(line, searchStr).Count;
+					for (int i = count; i > 0; --i)
+					{
+						searchFull += searchStr;
+					}
+					regex = new(searchFull + @"FMT_ET: (.*)\))");
+				}
+				else if(line.Contains("FT_integer["))
+				{
+					string searchStr = @"FT_integer\[0:(\d+)\], ";
+					count = Regex.Matches(line, searchStr).Count;
+					for (int i = count; i > 0; --i)
+					{
+						searchFull += searchStr;
+					}
+					regex = new(searchFull + @"FMT_ET: (.*)\))");
+				}
+				else
 				{
 					throw new NotImplementedException(
-						"Array with size type other than " +
-						"FT_long is not supported");
+						"Arrays with size type other than " +
+						"FT_long or FT_integer are not supported");
 				}
 
-				Regex regex = new(
-					@"(?>AT_subscr_data\(<\d+>FT_long\[0:(\d+)\], FMT_ET: (.*)\))");
-
 				Match match = regex.Match(line);
-				GroupCollection groups = match.Groups;
-
-				uint length = Convert.ToUInt32(groups[1].Value);
-				tag.length = unchecked((int)length);
-
-				string typeRef = groups[2].Value;
-				ParseTypes(typeRef, tag);
+				if (match.Success)
+				{
+					GroupCollection groups = match.Groups;
+					tag.isMultidimArray = count > 1;
+					string typeRef;
+					if (tag.isMultidimArray)
+					{
+						for (int i = 0; i < count; ++i)
+						{
+							uint length = Convert.ToUInt32(groups[1 + i].Value);
+							tag.arrayDimLengths.Add(unchecked((int)length));
+						}
+						typeRef = groups[1 + count].Value;
+					}
+					else
+					{
+						uint length = Convert.ToUInt32(groups[1].Value);
+						tag.length = unchecked((int)length);
+						typeRef = groups[2].Value;
+					}
+					ParseTypes(typeRef, tag);
+				}
+				else
+				{
+					throw new NotImplementedException(
+						"Unknown array format: " + line + " @" + current);
+				}
 			}
 			else
 				Console.WriteLine("Unknown attribute: " + line + " @" + current);
@@ -177,12 +218,13 @@ public partial class CompilationUnit: Tag
 		string[] lines,
 		ref int current,
 		int ID,
-		int sibling)
+		int sibling,
+		bool isVariadic)
 	{
 		Tag tag = new();
 		tag.ID = ID;
 		tag.sibling = sibling;
-		tag.tagType = Tag.TagType.Param;
+		tag.tagType = isVariadic ? Tag.TagType.VariadicParam : Tag.TagType.Param;
 
 		for(; lines[current].StartsWith(' '); ++current)
 		{

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 
 namespace DwarfOne2C
 {
@@ -56,6 +57,11 @@ public partial class CWriter
 				{
 					hasParams = true;
 					line += pPart1 + name + pPart2 + ", ";
+				}
+				else if(child.tagType == TagType.VariadicParam)
+				{
+					hasParams = true;
+					line += name + ", ";
 				}
 				else if(child.tagType == TagType.LocalVar)
 				{

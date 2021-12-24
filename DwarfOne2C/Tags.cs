@@ -47,6 +47,7 @@ public class Tag
 		Union,
 		Padding, // Local variable OR member...
 		MemberFunc,
+		VariadicParam,
 	}
 
 	public TagType tagType;
@@ -105,6 +106,11 @@ public class Tag
 	// Typedef
 	public bool isPointer = false; // Size helper
 	public bool isReference = false; // size helper
+	
+	// ArrayType
+	// 
+	public bool isMultidimArray = false;
+	public List<int> arrayDimLengths = new();
 
 	// Inheritance
 	// Member

@@ -62,7 +62,12 @@ public partial class CompilationUnit: Tag
 					case "TAG_formal_parameter":
 					{
 						allTags.Add(
-							ParseParameter(lines, ref current, ID, sibling));
+							ParseParameter(lines, ref current, ID, sibling, false));
+					} break;
+					case "TAG_unspecified_parameters":
+					{
+						allTags.Add(
+							ParseParameter(lines, ref current, ID, sibling, true));
 					} break;
 					case "TAG_global_subroutine":
 					{
