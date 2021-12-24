@@ -204,6 +204,8 @@ public partial class CWriter
 		{
 			code.Add(tabs + "\t" + element);
 		}
+		string last = code[code.Count - 1];
+		code[code.Count - 1] = last.Remove(last.Length - 1);
 
 		code.Add(tabs + "};");
 		code.Add("");
