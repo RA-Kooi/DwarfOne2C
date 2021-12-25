@@ -258,6 +258,12 @@ public partial class CompilationUnit: Tag
 					tag.size = sibling.location - tag.location;
 				}
 			}
+
+			// Fixup weird invalid names
+			if(tag.name != null && tag.name.StartsWith('@'))
+			{
+				tag.name = $"__anon_{tag.ID:X}";
+			}
 		}
 
 		void Recurse(Tag parent, int depth)
