@@ -262,7 +262,7 @@ public partial class CompilationUnit: Tag
 			// Fixup weird invalid names
 			if(tag.name != null && tag.name.StartsWith('@'))
 			{
-				tag.name = $"__anon_{tag.ID:X}";
+				tag.name = $"__anon_0x{tag.ID:X}";
 			}
 		}
 
