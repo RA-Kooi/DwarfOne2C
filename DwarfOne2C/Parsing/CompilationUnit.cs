@@ -308,8 +308,9 @@ public partial class CompilationUnit: Tag
 					}
 				}
 
-				if(child.tagType == TagType.Class
-				   || child.tagType == TagType.Struct)
+				if((child.tagType == TagType.Class
+					|| child.tagType == TagType.Struct)
+				   && child.firstChild != -1)
 				{
 					Recurse(child, 1);
 				}
