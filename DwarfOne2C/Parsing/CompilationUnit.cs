@@ -318,6 +318,33 @@ public partial class CompilationUnit: Tag
 		}
 
 		Recurse(allTags[0], 0);
+
+		// Discriminate global symbols with the same name
+		List<string> sameNames = new();
+
+		for(Tag tag = allTags[IDToIndex[this.firstChild]];
+			tag.sibling != Tag.NoSibling;
+			tag = allTags[IDToIndex[tag.sibling]])
+		{
+			switch(tag.tagType)
+			{
+			case Tag.TagType.CULocalFunc:
+			case Tag.TagType.Class:
+			case Tag.TagType.Enum:
+			case Tag.TagType.GlobalVar:
+			case Tag.TagType.GlobalFunc:
+			case Tag.TagType.Struct:
+			case Tag.TagType.LocalVar:
+			{
+				if(sameNames.Contains(tag.name))
+					tag.name = $"{tag.name}_0x{tag.ID:X}";
+				else
+					sameNames.Add(tag.name);
+			} break;
+			default:
+				continue;
+			}
+		}
 	}
 }
 }
