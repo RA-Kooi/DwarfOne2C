@@ -346,7 +346,9 @@ public partial class CompilationUnit: Tag
 			}
 
 			// Fixup missing type of functions
-			if(tag.tagType == TagType.GlobalFunc && tag.typeID == 0)
+			if((tag.tagType == TagType.GlobalFunc
+				|| tag.tagType == TagType.CULocalFunc)
+			   && tag.typeID == 0)
 			{
 				tag.typeID = (int)Type.BuiltInType.Void;
 			}
