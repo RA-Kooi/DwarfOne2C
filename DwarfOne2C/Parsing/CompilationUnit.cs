@@ -212,6 +212,53 @@ public partial class CompilationUnit: Tag
 
 	public void SecondPass()
 	{
+		// It is possible that our linked list has gaps, thanks to MetroWerksn't
+		// amazing DWARF implementation, and thus we need to detect these gaps
+		// and fix them up by connecting them...
+		// We essentially have 3 ways to fix this:
+		// 1) We go through the list of tags and check if the previous tag has
+		//    the current tag as its sibling, and then fix it up unless it's a
+		//    child tag.
+		// 2) We traverse the tags recursively and for each tag we check if it
+		//    it is referenced more than once. If it is we backwalk until we
+		//    find a tag that isn't referenced and then fix up the chain.
+		// 3) We traverse the list of tags and for each tag we check if it has
+		//    no references to it. If it doesn't, follow its chain downwards
+		//    and check where the tag with multiple references is, and then fix
+		//    up the chain.
+		// Method 2 is probably the most correct method, but that has a
+		// computational explosion issue. Method 3 is the easiest to implement,
+		// but it isn't as thorough.
+		// Method 1 is the fastest, but is the least thorough.
+		// Going with method 1 for now until I find it breaks again.
+		int idx = 1;
+		void FixChain(Tag parent, ref int i, int depth)
+		{
+			int lastIdx = 0;
+			for(; i < allTags.Count; ++i)
+			{
+				Tag current = allTags[i];
+				Tag prev = allTags[lastIdx];
+
+				lastIdx = i;
+
+				if(current.tagType == TagType.End)
+					return;
+
+				if(prev.sibling != current.ID)
+					prev.sibling = current.ID;
+
+				if(current.firstChild >= 0)
+				{
+					++i;
+					FixChain(current, ref i, depth + 1);
+					continue;
+				}
+			}
+		}
+
+		FixChain(this, ref idx, 0);
+
 		foreach(Tag tag in allTags)
 		{
 			tag.modifiers.Reverse();
