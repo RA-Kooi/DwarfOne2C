@@ -69,7 +69,7 @@ public partial class CWriter
 						if(hasParams)
 							line = line.Remove(line.Length - 2, 2);
 
-						line += ")" + pPart2;
+						line += ")" + part2;
 						code.Add(line);
 						code.Add(tabs + "{");
 						firstLocal = false;
