@@ -94,26 +94,28 @@ public partial class CompilationUnit: Tag
 			if(line.StartsWith("AT_subscr_data"))
 			{
 				Regex regex;
-				int count = 0;
 				string searchFull = @"(?>AT_subscr_data\(<\d+>";
+
+				int dimensionCount = 0;
+
 				if(line.Contains("FT_long["))
 				{
 					string searchStr = @"FT_long\[0:(\d+)\], ";
-					count = Regex.Matches(line, searchStr).Count;
-					for (int i = count; i > 0; --i)
-					{
+					dimensionCount = Regex.Matches(line, searchStr).Count;
+
+					for (int i = dimensionCount; i > 0; --i)
 						searchFull += searchStr;
-					}
+
 					regex = new(searchFull + @"FMT_ET: (.*)\))");
 				}
 				else if(line.Contains("FT_integer["))
 				{
 					string searchStr = @"FT_integer\[0:(\d+)\], ";
-					count = Regex.Matches(line, searchStr).Count;
-					for (int i = count; i > 0; --i)
-					{
+					dimensionCount = Regex.Matches(line, searchStr).Count;
+
+					for (int i = dimensionCount; i > 0; --i)
 						searchFull += searchStr;
-					}
+
 					regex = new(searchFull + @"FMT_ET: (.*)\))");
 				}
 				else
@@ -124,19 +126,24 @@ public partial class CompilationUnit: Tag
 				}
 
 				Match match = regex.Match(line);
+
 				if (match.Success)
 				{
-					GroupCollection groups = match.Groups;
-					tag.isMultidimArray = count > 1;
 					string typeRef;
+
+					GroupCollection groups = match.Groups;
+
+					tag.isMultidimArray = dimensionCount > 1;
+
 					if (tag.isMultidimArray)
 					{
-						for (int i = 0; i < count; ++i)
+						for (int i = 0; i < dimensionCount; ++i)
 						{
 							uint length = Convert.ToUInt32(groups[1 + i].Value);
 							tag.arrayDimLengths.Add(unchecked((int)length));
 						}
-						typeRef = groups[1 + count].Value;
+
+						typeRef = groups[1 + dimensionCount].Value;
 					}
 					else
 					{
@@ -144,6 +151,7 @@ public partial class CompilationUnit: Tag
 						tag.length = unchecked((int)length);
 						typeRef = groups[2].Value;
 					}
+
 					ParseTypes(typeRef, tag);
 				}
 				else
