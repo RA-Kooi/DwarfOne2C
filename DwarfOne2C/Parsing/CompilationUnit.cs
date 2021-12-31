@@ -259,6 +259,59 @@ public partial class CompilationUnit: Tag
 
 		FixChain(this, ref idx, 0);
 
+		void Recurse(Tag parent, int depth)
+		{
+			if(parent.firstChild == -1)
+				return;
+
+			for(Tag child = allTags[IDToIndex[parent.firstChild]];
+				child.sibling != Tag.NoSibling;
+				child = allTags[IDToIndex[child.sibling]])
+			{
+				// Fixup TAG_padding being member variables, global variables,
+				// and global functions at the same time...
+				if(child.tagType == TagType.Padding)
+				{
+					if(depth == 0)
+						child.tagType = child.isFunction
+							? TagType.GlobalFunc
+							: TagType.GlobalVar;
+					else
+						child.tagType = child.isFunction
+							? TagType.GlobalFunc
+							: TagType.Member;
+
+					if(child.sibling == parent.sibling)
+					{
+						child.sibling = Tag.NoSibling;
+						break;
+					}
+				}
+				else if(child.tagType == TagType.GlobalFunc)
+				{
+					if(depth > 0)
+					{
+						// Remove staticness from functions that are
+						// not top level
+						child.isStatic = false;
+
+						// It is also a class/struct member function
+						// in this case
+						child.tagType = TagType.MemberFunc;
+					}
+				}
+
+				if((child.tagType == TagType.Class
+					|| child.tagType == TagType.Struct)
+				   && child.firstChild != -1)
+				{
+					Recurse(child, 1);
+				}
+			}
+		}
+
+		Recurse(allTags[0], 0);
+
 		foreach(Tag tag in allTags)
 		{
 			tag.modifiers.Reverse();
@@ -312,59 +365,6 @@ public partial class CompilationUnit: Tag
 				tag.name = $"__anon_0x{tag.ID:X}";
 			}
 		}
-
-		void Recurse(Tag parent, int depth)
-		{
-			if(parent.firstChild == -1)
-				return;
-
-			for(Tag child = allTags[IDToIndex[parent.firstChild]];
-				child.sibling != Tag.NoSibling;
-				child = allTags[IDToIndex[child.sibling]])
-			{
-				// Fixup TAG_padding being member variables, global variables,
-				// and global functions at the same time...
-				if(child.tagType == TagType.Padding)
-				{
-					if(depth == 0)
-						child.tagType = child.isFunction
-							? TagType.GlobalFunc
-							: TagType.GlobalVar;
-					else
-						child.tagType = child.isFunction
-							? TagType.GlobalFunc
-							: TagType.Member;
-
-					if(child.sibling == parent.sibling)
-					{
-						child.sibling = Tag.NoSibling;
-						break;
-					}
-				}
-				else if(child.tagType == TagType.GlobalFunc)
-				{
-					if(depth > 0)
-					{
-						// Remove staticness from functions that are
-						// not top level
-						child.isStatic = false;
-
-						// It is also a class/struct member function
-						// in this case
-						child.tagType = TagType.MemberFunc;
-					}
-				}
-
-				if((child.tagType == TagType.Class
-					|| child.tagType == TagType.Struct)
-				   && child.firstChild != -1)
-				{
-					Recurse(child, 1);
-				}
-			}
-		}
-
-		Recurse(allTags[0], 0);
 
 		// Discriminate global symbols with the same name
 		List<string> sameNames = new();
