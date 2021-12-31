@@ -127,7 +127,7 @@ public class Tag
 	public bool isDirty = false;
 
 	// Padding
-	public bool isFunction = true;
+	public bool isFunction = false;
 }
 
 public class Type
