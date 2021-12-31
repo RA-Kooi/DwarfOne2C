@@ -73,22 +73,26 @@ public partial class CompilationUnit: Tag
 			if(line[index] != 'M')
 				break;
 
-			if(index + pointerLen <= line.Length && line.Substring(index, pointerLen) == "MOD_pointer_to")
+			if(index + pointerLen <= line.Length
+			   && line.Substring(index, pointerLen) == "MOD_pointer_to")
 			{
 				tag.modifiers.Add(Type.Modifier.Pointer);
 				index += pointerLen + 1;
 			}
-			else if(index + refLen <= line.Length && line.Substring(index, refLen) == "MOD_reference_to")
+			else if(index + refLen <= line.Length
+					&& line.Substring(index, refLen) == "MOD_reference_to")
 			{
 				tag.modifiers.Add(Type.Modifier.Reference);
 				index += refLen + 1;
 			}
-			else if(index + constLen <= line.Length && line.Substring(index, constLen) == "MOD_const")
+			else if(index + constLen <= line.Length
+					&& line.Substring(index, constLen) == "MOD_const")
 			{
 				tag.modifiers.Add(Type.Modifier.Const);
 				index += constLen + 1;
 			}
-			else if(index + volatileLen <= line.Length && line.Substring(index, volatileLen) == "MOD_volatile")
+			else if(index + volatileLen <= line.Length
+					&& line.Substring(index, volatileLen) == "MOD_volatile")
 			{
 				tag.modifiers.Add(Type.Modifier.Volatile);
 				index += volatileLen + 1;

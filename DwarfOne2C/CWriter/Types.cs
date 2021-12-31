@@ -80,7 +80,7 @@ public partial class CWriter
 		if(current.typeID > 0)
 		{
 			Tag referenced = allTags[IDToIndex[current.typeID]];
-			(type, part2) = GetType(allTags, IDToIndex, current);
+			(type, part2) = GetType(allTags, IDToIndex, referenced);
 			type += GetModifiers(allTags, IDToIndex, current);
 		}
 		else
@@ -108,7 +108,6 @@ public partial class CWriter
 					? ""
 					: "" + (current.length + 1));
 		}
-		
 
 		return (type, part2);
 	}
