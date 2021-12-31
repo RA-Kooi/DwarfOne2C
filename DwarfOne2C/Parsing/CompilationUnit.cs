@@ -187,7 +187,9 @@ public partial class CompilationUnit: Tag
 				IDToIndex.Add(ID, allTags.Count - 1);
 
 				// If prev->sibling != ID
-				if(allTags[allTags.Count - 2].sibling != ID)
+				int prevSibling = allTags[allTags.Count - 2].sibling;
+
+				if(prevSibling != ID && prevSibling != sibling)
 					allTags[allTags.Count - 2].firstChild = ID;
 			}
 
