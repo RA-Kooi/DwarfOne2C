@@ -93,20 +93,22 @@ public partial class CWriter
 		{
 			foreach (int len in current.arrayDimLengths)
 			{
-				part2 += string.Format(
+				part2 = string.Format(
 					"[{0}]",
 					len < 0
 						? ""
-						: "" + (len + 1));
+						: "" + (len + 1))
+					+ part2;
 			}
 		}
 		else
 		{
-			part2 += string.Format(
+			part2 = string.Format(
 				"[{0}]",
 				current.length < 0
 					? ""
-					: "" + (current.length + 1));
+					: "" + (current.length + 1))
+				+ part2;
 		}
 
 		return (type, part2);
