@@ -80,7 +80,6 @@ public partial class CWriter
 		if(current.typeID > 0)
 		{
 			(type, part2) = GetType(allTags, IDToIndex, current);
-			type += GetModifiers(allTags, IDToIndex, current);
 		}
 		else
 		{
@@ -129,7 +128,7 @@ public partial class CWriter
 		else
 		{
 			(part1, part2) = GetType(allTags, IDToIndex, current);
-			part1 += GetModifiers(allTags, IDToIndex, current) + "(";
+			part1 += "(";
 		}
 
 		StringBuilder sb = new();
