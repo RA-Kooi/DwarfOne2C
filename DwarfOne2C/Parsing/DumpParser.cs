@@ -122,6 +122,9 @@ class DumpParser
 			}
 		}
 
+		Console.Error.WriteLine(unit.name);
+		Console.Error.Flush();
+
 		unit.FirstPass(lines, current);
 		unit.SecondPass();
 
