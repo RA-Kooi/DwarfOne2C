@@ -114,7 +114,10 @@ public class Tag
 	// Inheritance
 	// Member
 	// Typedef (indirect)
-	public int location = -1; // for class member ordering
+	// ^^^ For class member ordering ^^^
+	// Global variables
+	// CULocal variables
+	public int location = -1;
 
 	// Member (union)
 	public int bitSize = -1, bitOffset = -1;

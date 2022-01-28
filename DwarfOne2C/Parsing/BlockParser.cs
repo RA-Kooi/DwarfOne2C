@@ -264,7 +264,7 @@ public partial class CompilationUnit: Tag
 
 			if(!ParseName(line, tag)
 			   && !ParseTypes(line, tag)
-			   && !line.StartsWith("AT_location"))
+			   && !ParseLocation(line, tag))
 				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
@@ -358,7 +358,7 @@ public partial class CompilationUnit: Tag
 			if(!ParseName(line, tag)
 			   && !ParseTypes(line, tag)
 			   && !ParseLoUser(line, tag)
-			   && !line.StartsWith("AT_location"))
+			   && !ParseLocation(line, tag))
 				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 

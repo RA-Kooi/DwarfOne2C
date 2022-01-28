@@ -80,7 +80,10 @@ public partial class CWriter
 					continue;
 
 				if(current.comment != null)
-					code.Add("// " + current.comment);
+					code.Add($"// {current.comment}");
+
+				if(current.location != -1)
+					code.Add($"// Location: 0x{current.location:X}");
 
 				(string part1, string part2) = GetType(
 					allTags,
@@ -101,7 +104,10 @@ public partial class CWriter
 				code.Add("// Local to compilation unit");
 
 				if(current.comment != null)
-					code.Add("// " + current.comment);
+					code.Add($"// {current.comment}");
+
+				if(current.location != -1)
+					code.Add($"// Location: 0x{current.location:X}");
 
 				(string part1, string part2) = GetType(
 					allTags,
