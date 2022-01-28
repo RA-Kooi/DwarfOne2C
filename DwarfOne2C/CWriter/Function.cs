@@ -129,6 +129,10 @@ public partial class CWriter
 			line += ';';
 			code.Add(line);
 		}
+		else
+		{
+			code.Add("}");
+		}
 
 		code.Add("");
 
