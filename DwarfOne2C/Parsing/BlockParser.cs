@@ -210,7 +210,7 @@ public partial class CompilationUnit: Tag
 
 			if(!line.StartsWith("AT_low_pc")
 					&& !line.StartsWith("AT_high_pc")
-					&& !line.StartsWith('(')
+					&& !ParseReference(line, tag)
 					&& !ParseName(line, tag)
 					&& !ParseTypes(line, tag)
 					&& !ParseLoUser(line, tag)
@@ -446,7 +446,7 @@ public partial class CompilationUnit: Tag
 					&& !ParseTypes(line, tag)
 					&& !ParseLoUser(line, tag)
 					&& !ParseAtMember(line, tag)
-					&& !line.StartsWith('(')
+					&& !ParseReference(line, tag)
 					&& !line.StartsWith("AT_location"))
 				Console.Error.WriteLine("Unkown attribute: " + line + " @" + current);
 		}
