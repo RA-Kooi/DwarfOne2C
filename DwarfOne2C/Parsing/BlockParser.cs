@@ -25,7 +25,7 @@ public partial class CompilationUnit: Tag
 
 			if(!ParseName(line, tag)
 			   && !ParseByteSize(line, tag))
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		tag.comment = "size: " + $"0x{tag.size:X}";
@@ -68,7 +68,7 @@ public partial class CompilationUnit: Tag
 				}
 			}
 			else
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		tag.comment = $"size: 0x{tag.size:X}";
@@ -161,7 +161,7 @@ public partial class CompilationUnit: Tag
 				}
 			}
 			else
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		return tag;
@@ -186,7 +186,7 @@ public partial class CompilationUnit: Tag
 			   && !ParseLocation(line, tag)
 			   && !ParseName(line, tag)
 			   && !ParseAccessLevel(line, tag))
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		return tag;
@@ -216,7 +216,7 @@ public partial class CompilationUnit: Tag
 					&& !ParseLoUser(line, tag)
 					&& !ParseAccessLevel(line, tag)
 					&& !ParseAtMember(line, tag))
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		return tag;
@@ -241,7 +241,7 @@ public partial class CompilationUnit: Tag
 			if(!ParseName(line, tag)
 			   && !ParseTypes(line, tag)
 			   && !line.StartsWith("AT_location"))
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		return tag;
@@ -265,7 +265,7 @@ public partial class CompilationUnit: Tag
 			if(!ParseName(line, tag)
 			   && !ParseTypes(line, tag)
 			   && !line.StartsWith("AT_location"))
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		// We cannot determine if this is a CU local variable or a function
@@ -291,7 +291,7 @@ public partial class CompilationUnit: Tag
 			string line = lines[current].TrimStart();
 
 			if(!ParseName(line, tag) && !ParseTypes(line, tag))
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		return tag;
@@ -332,7 +332,7 @@ public partial class CompilationUnit: Tag
 					16);
 			}
 			else
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		tag.comment = $"0x{tag.location:X}";
@@ -359,7 +359,7 @@ public partial class CompilationUnit: Tag
 			   && !ParseTypes(line, tag)
 			   && !ParseLoUser(line, tag)
 			   && !line.StartsWith("AT_location"))
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		return tag;
@@ -381,7 +381,7 @@ public partial class CompilationUnit: Tag
 			string line = lines[current].TrimStart();
 
 			if(!ParseTypes(line, tag))
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		return tag;
@@ -409,7 +409,7 @@ public partial class CompilationUnit: Tag
 			}
 			else if(!ParseUserType(line, tag)
 					&& !line.Contains("AT_containing_type"))
-				Console.WriteLine("Unknown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unknown attribute: " + line + " @" + current);
 		}
 
 		tag.modifiers.Add(Type.Modifier.Pointer);
@@ -448,7 +448,7 @@ public partial class CompilationUnit: Tag
 					&& !ParseAtMember(line, tag)
 					&& !line.StartsWith('(')
 					&& !line.StartsWith("AT_location"))
-				Console.WriteLine("Unkown attribute: " + line + " @" + current);
+				Console.Error.WriteLine("Unkown attribute: " + line + " @" + current);
 		}
 
 		return tag;

@@ -180,7 +180,7 @@ public partial class CompilationUnit: Tag
 					} break;
 					default:
 					{
-						Console.WriteLine("Unknown TAG type: " + tagLine[2]);
+						Console.Error.WriteLine("Unknown TAG type: " + tagLine[2]);
 					} break;
 				}
 
