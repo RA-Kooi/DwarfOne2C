@@ -32,9 +32,10 @@ public partial class CWriter
 			part1,
 			current.name);
 
+		bool firstLocal = true;
+
 		if(current.firstChild >= 0)
 		{
-			bool firstLocal = true;
 			bool hasParams = false;
 
 			int i = 0;
@@ -86,23 +87,48 @@ public partial class CWriter
 				}
 			}
 
-			// We had a local variable;
-			if(!firstLocal)
-			{
-				code.Add(tabs + "}");
-			}
-			else
+			// We didn't have a local variable;
+			if(firstLocal)
 			{
 				if(hasParams)
 					line = line.Remove(line.Length - 2, 2);
 
-				line += ")" + part2 + ";";
-				code.Add(line);
+				line += ")" + part2;
 			}
 		}
 		else
 		{
-			line += ")" + part2 + ";";
+			line += ")" + part2;
+		}
+
+		if(current.references.Count > 0)
+		{
+			if(firstLocal)
+			{
+				code.Add(line);
+				code.Add("{");
+			}
+
+			foreach(int reference in current.references)
+			{
+				Tag referenced = allTags[IDToIndex[reference]];
+				string name = referenced.name != null
+					? referenced.name
+					: $"unknown_0x{reference:X}";
+
+				line = $"{tabs}\t// References: {name}";
+
+				if(referenced.location != -1)
+					line += $" (0x{referenced.location:X})";
+
+				code.Add(line);
+			}
+
+			code.Add("}");
+		}
+		else if(firstLocal)
+		{
+			line += ';';
 			code.Add(line);
 		}
 
