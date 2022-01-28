@@ -97,7 +97,7 @@ class Program
 			FileAttributes attrs = File.GetAttributes(outputDirectory);
 			if(!attrs.HasFlag(FileAttributes.Directory))
 			{
-				Console.WriteLine("Error: Output directory is not a directory");
+				Console.Error.WriteLine("Error: Output directory is not a directory");
 				return -1;
 			}
 		}
@@ -109,13 +109,13 @@ class Program
 			}
 			catch(SystemException se)
 			{
-				Console.WriteLine("Error creating directory: " + se.ToString());
+				Console.Error.WriteLine("Error creating directory: " + se.ToString());
 				return 1;
 			}
 		}
 		catch(SystemException e)
 		{
-			Console.WriteLine(
+			Console.Error.WriteLine(
 				"Error on trying to access output directory: " + e.ToString());
 
 			return 1;

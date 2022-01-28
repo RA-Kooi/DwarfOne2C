@@ -16,7 +16,7 @@ class DumpParser
 		}
 		catch(Exception e)
 		{
-			Console.WriteLine("Error opening dump: " + e.ToString());
+			Console.Error.WriteLine("Error opening dump: " + e.ToString());
 			throw;
 		}
 
