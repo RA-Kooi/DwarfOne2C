@@ -325,5 +325,21 @@ public partial class CompilationUnit: Tag
 
 		return false;
 	}
+
+	private static bool ParseReference(string line, Tag tag)
+	{
+		if(line.StartsWith('('))
+		{
+			int reference = Convert.ToInt32(
+				line.Substring(1, line.Length - 2),
+				16);
+
+			tag.references.Add(reference);
+
+			return true;
+		}
+
+		return false;
+	}
 }
 }

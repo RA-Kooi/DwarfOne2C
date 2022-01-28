@@ -131,6 +131,10 @@ public class Tag
 
 	// Padding
 	public bool isFunction = false;
+
+	// Padding
+	// Function
+	public List<int> references = new();
 }
 
 public class Type
