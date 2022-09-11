@@ -121,16 +121,7 @@ public partial class CompilationUnit: Tag
 
 	private static bool ParseFundamentalType(string line, Tag tag)
 	{
-		if(line == "AT_fund_type()")
-		{
-			// Weird Metrowerks edge case where the variable or whatever
-			// literally has no type. Probably a limit to recursion depth
-			// or something...
-			tag.typeID = (int)Type.BuiltInType.Unknown;
-			tag.size = -1;
-			tag.comment = "Size unknown...";
-		}
-		else if(line.StartsWith("AT_fund_type"))
+		if(line.StartsWith("AT_fund_type"))
 		{
 			string FT = line.Substring(13, line.Length - 14);
 			Type.BuiltInType builtInType = Type.FTToBuiltInType(FT);
@@ -162,30 +153,6 @@ public partial class CompilationUnit: Tag
 
 			int typeNameStart = line.IndexOf("FT_");
 			int typeNameEnd = line.IndexOf(')');
-
-			if(typeNameStart == -1)
-			{
-				// Hello boys and girls, in this episode of weird fucking edge
-				// cases in Metrowerks, we now have references/pointers tooo...
-				// NOTHING!!! The compiler in its all encompassing wisdom
-				// seems to just stop outputting debug information at some point
-				// and just leaves things blank. And since all cases in my test
-				// subject seem to be pointers or references, I am going to
-				// (reasonably) assume the size is 4.
-				// If you're forking this to work with another GC game, I will
-				// first offer you my condolences. If your size calculations
-				// are off and it breaks the anonymous union detection code,
-				// you will most likely have to inject dummy types in your
-				// debug info to make it work or figure out a different way
-				// of detecting anonymous unions in classes/structs. Who knows,
-				// maybe you're lucky and the compiler actually outputs some
-				// usable information to know if you're in an anonymous union
-				// or not.
-				tag.size = 4;
-				tag.typeID = (int)Type.BuiltInType.Unknown;
-
-				return true;
-			}
 
 			string typeName = line.Substring(
 				typeNameStart,
