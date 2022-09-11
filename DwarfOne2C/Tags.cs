@@ -172,7 +172,12 @@ public class Type
 
 		Label            = -22, // FT_label; Unused (fortran)
 
-		Unknown          = -23, // For when AT_fund_type() is empty...
+		// Metrowerks extensions
+		LongLong         = -23, // FT_long_long; long long
+		SignedLongLong   = -24, // FT_signed_long_long; signed long long
+		UnsignedLongLong = -25, // FT_unsigned_long_long; unsigned long long
+
+		Unknown          = -26, // For when AT_fund_type() is empty...
 	}
 
 	public enum Modifier
@@ -229,6 +234,12 @@ public class Type
 			return "void";
 		case BuiltInType.Pointer:
 			return "void *";
+		case BuiltInType.LongLong:
+			return "long long";
+		case BuiltInType.SignedLongLong:
+			return "signed long long";
+		case BuiltInType.UnsignedLongLong:
+			return "unsigned long long";
 		case BuiltInType.Unknown:
 			return "UnknownType";
 		}
@@ -283,6 +294,12 @@ public class Type
 			return BuiltInType.Void;
 		case "FT_pointer":
 			return BuiltInType.Pointer;
+		case "FT_long_long":
+			return BuiltInType.LongLong;
+		case "FT_signed_long_long":
+			return BuiltInType.SignedLongLong;
+		case "FT_unsigned_long_long":
+			return BuiltInType.UnsignedLongLong;
 		}
 
 		throw new ArgumentException(FT + " is not a built-in type.");
@@ -308,21 +325,21 @@ public class Type
 		case BuiltInType.SignedLong:
 		case BuiltInType.UnsignedLong:
 		case BuiltInType.Float:
+		case BuiltInType.Pointer:
 			return 4;
+		case BuiltInType.Double:
 		case BuiltInType.DoublePrecFloat:
+		case BuiltInType.LongLong:
+		case BuiltInType.SignedLongLong:
+		case BuiltInType.UnsignedLongLong:
 			return 8;
 		case BuiltInType.ExtPrecFloat:
-			return 12;
-		case BuiltInType.Double:
-			return 8;
 		case BuiltInType.DoublePrecDouble:
 			return 12;
 		case BuiltInType.ExtPrecDouble:
 			return 16;
 		case BuiltInType.Void:
 			return 0;
-		case BuiltInType.Pointer:
-			return 4;
 		}
 
 		throw new ArgumentException(
