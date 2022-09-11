@@ -124,6 +124,9 @@ class Program
 		string splitPath = arguments[1];
 		string cuPath = arguments[2];
 
+		splitPath = splitPath.Replace(@"\\", @"\");
+		cuPath = cuPath.Replace(@"\\", @"\");
+
 		DumpParser dumpParser = new DumpParser(fullPath);
 
 		CompilationUnit unit = dumpParser.Parse(cuPath);
