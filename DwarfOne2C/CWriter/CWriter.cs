@@ -27,7 +27,12 @@ public partial class CWriter
 		   || splitPath.EndsWith('/'))
 			splitPath = splitPath.Remove(splitPath.Length - 1);
 
-		outputPath = unit.name.Replace(splitPath, outputDirectory);
+		outputPath = unit.name.Replace(splitPath, string.Empty);
+
+		if(Path.DirectorySeparatorChar == '/')
+			outputPath = outputPath.Replace('\\', '/');
+
+		outputPath = Path.Join(outputDirectory, outputPath);
 
 		List<Tag> allTags = unit.allTags;
 		Dictionary<int, int> IDToIndex = unit.IDToIndex;
