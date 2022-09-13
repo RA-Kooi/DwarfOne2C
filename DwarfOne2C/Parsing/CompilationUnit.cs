@@ -65,7 +65,7 @@ public partial class CompilationUnit: Tag
 		IDToIndex.Add(ID, allTags.Count - 1);
 	}
 
-	public void FirstPass(string[] lines, int current)
+	public void Parse(string[] lines, int current)
 	{
 		for(; current < lines.Length; ++current)
 		{

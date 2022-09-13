@@ -70,7 +70,7 @@ class DumpParser
 				Console.Error.WriteLine(unit.name);
 				Console.Error.Flush();
 
-				unit.FirstPass(lines, current);
+				unit.Parse(lines, current);
 
 				units.Add(unit);
 			}
