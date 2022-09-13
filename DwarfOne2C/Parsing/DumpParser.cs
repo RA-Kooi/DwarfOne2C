@@ -10,6 +10,9 @@ class DumpParser
 	private string[] lines;
 	private int start, current;
 
+	public List<Tag> allTags = new();
+	public Dictionary<int /* ID */, int /* tagIndex */> IDToIndex = new();
+
 	public DumpParser(string fileName)
 	{
 		lines = File.ReadAllLines(fileName, Encoding.UTF8);
@@ -58,73 +61,23 @@ class DumpParser
 		{
 			if(lines[current].EndsWith("TAG_compile_unit"))
 			{
-				int cuStart = current;
+				CompilationUnit unit = new(
+					allTags,
+					IDToIndex,
+					lines,
+					ref current);
 
-				for(; current < lines.Length; ++current)
-				{
-					string line = lines[current].TrimStart();
-					if(line.StartsWith("AT_name"))
-					{
-						current = cuStart;
+				Console.Error.WriteLine(unit.name);
+				Console.Error.Flush();
 
-						CompilationUnit unit = ParseCompilationUnit();
-						units.Add(unit);
-					}
-					else if(line == string.Empty)
-						break;
-				}
+				unit.FirstPass(lines, current);
+				unit.SecondPass();
+
+				units.Add(unit);
 			}
 		}
 
 		return units;
-	}
-
-	private CompilationUnit ParseCompilationUnit()
-	{
-		CompilationUnit unit = new();
-
-		unit.ID = Convert.ToInt32(
-			lines[current++].Split(
-				':',
-				StringSplitOptions.RemoveEmptyEntries)[0],
-			16);
-
-		string sibling = lines[current++].TrimStart();
-		unit.sibling = Convert.ToInt32(
-			sibling.Substring(11, sibling.Length - 12),
-			16);
-
-		for(; current < lines.Length; ++current)
-		{
-			if(lines[current] == string.Empty)
-				break;
-
-			string line = lines[current].TrimStart();
-
-			if(line.StartsWith("AT_name"))
-			{
-				unit.name = line.Substring(9, line.Length - 11);
-			}
-			else if(line.StartsWith("AT_language"))
-			{
-				string language = line.Substring(12, line.Length - 13);
-				if(language == "LANG_C_PLUS_PLUS")
-					unit.language = CompilationUnit.Language.Cpp;
-				else if(language.StartsWith("LANG_C"))
-					unit.language = CompilationUnit.Language.C;
-				else
-					throw new NotImplementedException(
-						"Unimplemented language tag.");
-			}
-		}
-
-		Console.Error.WriteLine(unit.name);
-		Console.Error.Flush();
-
-		unit.FirstPass(lines, current);
-		unit.SecondPass();
-
-		return unit;
 	}
 }
 }
