@@ -19,7 +19,10 @@ public partial class CWriter
 		code = new();
 	}
 
-	public void GenerateCode(CompilationUnit unit)
+	public void GenerateCode(
+		CompilationUnit unit,
+		List<Tag> allTags,
+		Dictionary<int, int> IDToIndex)
 	{
 		if(splitPath.EndsWith('\\')
 		   || splitPath.EndsWith('/'))
@@ -32,23 +35,20 @@ public partial class CWriter
 
 		outputPath = Path.Join(outputDirectory, outputPath);
 
-		List<Tag> allTags = unit.allTags;
-		Dictionary<int, int> IDToIndex = unit.IDToIndex;
-
 		Tag current = allTags[IDToIndex[unit.firstChild]];
 
-		List<Tag> memberFuncs = allTags
+		List<Tag> memberFuncs = unit.childTags
 			.Where(i => i.tagType == TagType.GlobalFunc && i.memberOfID >= 0)
 			.ToList();
 
 		Func<Tag, bool> predicate = i =>
 		{
-			return allTags.Where(j => j.tagType == TagType.TypeDef)
+			return unit.childTags.Where(j => j.tagType == TagType.TypeDef)
 				.Any(j => j.name == i.name);
 		};
 
 		// Filled by classes and structs
-		List<Tag> staticMembers = allTags
+		List<Tag> staticMembers = unit.childTags
 			.Where(i => i.tagType == TagType.GlobalVar)
 			.Where(predicate)
 			.ToList();

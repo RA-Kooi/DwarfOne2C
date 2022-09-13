@@ -13,8 +13,10 @@ public partial class CompilationUnit: Tag
 
 	public Language language;
 
-	public List<Tag> allTags;
-	public Dictionary<int /* ID */, int /* tagIndex */> IDToIndex;
+	public List<Tag> childTags = new();
+
+	private List<Tag> allTags;
+	private Dictionary<int /* ID */, int /* tagIndex */> IDToIndex;
 
 	public CompilationUnit(
 		List<Tag> allTags,
@@ -234,6 +236,7 @@ public partial class CompilationUnit: Tag
 				}
 
 				IDToIndex.Add(ID, allTags.Count - 1);
+				childTags.Add(allTags[allTags.Count - 1]);
 
 				// If prev->sibling != ID
 				int prevSibling = allTags[allTags.Count - 2].sibling;
@@ -257,6 +260,7 @@ public partial class CompilationUnit: Tag
 
 				allTags.Add(endTag);
 				IDToIndex.Add(ID, allTags.Count - 1);
+				childTags.Add(allTags[allTags.Count - 1]);
 			}
 		}
 	}
