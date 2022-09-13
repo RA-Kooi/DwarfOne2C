@@ -22,12 +22,17 @@ As an example we will take a fictional game called YourGame which has an elf wit
 
 ```sh
 dwarfone YourGame.elf > YourGame-dwarf.txt
-DwarfOne2C.exe --list-files YourGame-dwarf.txt
+DwarfOne2C.exe list YourGame-dwarf.txt
 
-# Pick a file from the output
+#Fictional output: C:\GameCube\src\main.cpp
 
-# Output in current folder, add path to output folder at the end if you want it to output somewhere else
-DwarfOne2C.exe YourGame-dwarf.txt C:\YourGame\ C:\YourGame\src\main.cpp
+# Pick a list files from the output and put them in a file called files.txt
+# Make a list of paths you want to strip from the file paths in files.txt and put them in a file called split.txt
+
+# split.txt contents: C:\GameCube\
+
+# Output in a folder called out
+DwarfOne2C.exe dump YourGame-dwarf.txt files.txt split.txt -o out
 ```
 
-If you're lucky and it didn't crash, you should now have a file called `main.cpp` in `.\src\`
+If you're lucky and it didn't crash, you should now have a file called `main.cpp` in `.out\src\`
