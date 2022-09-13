@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace DwarfOne2C
 {
@@ -11,15 +12,7 @@ class DumpParser
 
 	public DumpParser(string fileName)
 	{
-		try
-		{
-			lines = File.ReadAllLines(fileName, System.Text.Encoding.UTF8);
-		}
-		catch(Exception e)
-		{
-			Console.Error.WriteLine("Error opening dump: " + e.ToString());
-			throw;
-		}
+		lines = File.ReadAllLines(fileName, Encoding.UTF8);
 
 		for(int i = 0; i < Math.Min(100, lines.Length); ++i)
 		{
@@ -37,7 +30,9 @@ class DumpParser
 		{
 			if(lines[current].EndsWith("TAG_compile_unit"))
 			{
-				for(; current < lines.Length && lines[current] != string.Empty; ++current)
+				for(;
+					current < lines.Length && lines[current] != string.Empty;
+					++current)
 				{
 					string line = lines[current].TrimStart();
 
