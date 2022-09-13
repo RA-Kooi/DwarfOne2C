@@ -165,7 +165,7 @@ public partial class CompilationUnit: Tag
 
 			tag.size = tag.isPointer
 				? 4
-				: tag.tagType == Tag.TagType.ArrayType
+				: tag.tagType == TagType.ArrayType
 					? (tag.length < 0 ? 4 : size * tag.length)
 					: size;
 
@@ -193,7 +193,7 @@ public partial class CompilationUnit: Tag
 			}
 
 			Tag referenced = allTags[index];
-			tag.size = tag.tagType == Tag.TagType.ArrayType
+			tag.size = tag.tagType == TagType.ArrayType
 				? (tag.length < 0 ? 4 : referenced.size * tag.length)
 				: referenced.size;
 
@@ -233,7 +233,7 @@ public partial class CompilationUnit: Tag
 				tag.size = 4; // Includes ref to pointer
 			else if(tag.isReference)
 			{
-				if(referenced.tagType == Tag.TagType.ArrayType)
+				if(referenced.tagType == TagType.ArrayType)
 					tag.size = 4;
 			}
 			else

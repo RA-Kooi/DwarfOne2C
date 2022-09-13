@@ -10,7 +10,7 @@ public partial class CompilationUnit: Tag
 		ref int current,
 		int ID,
 		int sibling,
-		Tag.TagType tagType)
+		TagType tagType)
 	{
 		Tag tag = new();
 		tag.ID = ID;
@@ -41,7 +41,7 @@ public partial class CompilationUnit: Tag
 		Tag tag = new();
 		tag.ID = ID;
 		tag.sibling = sibling;
-		tag.tagType = Tag.TagType.Enum;
+		tag.tagType = TagType.Enum;
 
 		for(; lines[current].StartsWith(' '); ++current)
 		{
@@ -84,7 +84,7 @@ public partial class CompilationUnit: Tag
 		Tag tag = new();
 		tag.ID = ID;
 		tag.sibling = sibling;
-		tag.tagType = Tag.TagType.ArrayType;
+		tag.tagType = TagType.ArrayType;
 
 		for(; lines[current].StartsWith(' '); ++current)
 		{
@@ -175,7 +175,7 @@ public partial class CompilationUnit: Tag
 		Tag tag = new();
 		tag.ID = ID;
 		tag.sibling = sibling;
-		tag.tagType = Tag.TagType.Inheritance;
+		tag.tagType = TagType.Inheritance;
 
 		for(; lines[current].StartsWith(' '); ++current)
 		{
@@ -196,7 +196,7 @@ public partial class CompilationUnit: Tag
 		ref int current,
 		int ID,
 		int sibling,
-		Tag.TagType tagType)
+		TagType tagType)
 	{
 		Tag tag = new();
 		tag.ID = ID;
@@ -231,7 +231,7 @@ public partial class CompilationUnit: Tag
 		Tag tag = new();
 		tag.ID = ID;
 		tag.sibling = sibling;
-		tag.tagType = isVariadic ? Tag.TagType.VariadicParam : Tag.TagType.Param;
+		tag.tagType = isVariadic ? TagType.VariadicParam : TagType.Param;
 
 		for(; lines[current].StartsWith(' '); ++current)
 		{
@@ -255,7 +255,7 @@ public partial class CompilationUnit: Tag
 		Tag tag = new();
 		tag.ID = ID;
 		tag.sibling = sibling;
-		tag.tagType = Tag.TagType.LocalVar;
+		tag.tagType = TagType.LocalVar;
 
 		for(; lines[current].StartsWith(' '); ++current)
 		{
@@ -282,7 +282,7 @@ public partial class CompilationUnit: Tag
 		Tag tag = new();
 		tag.ID = ID;
 		tag.sibling = sibling;
-		tag.tagType = Tag.TagType.TypeDef;
+		tag.tagType = TagType.TypeDef;
 		tag.isStatic = true;
 
 		for(; lines[current].StartsWith(' '); ++current)
@@ -305,7 +305,7 @@ public partial class CompilationUnit: Tag
 		Tag tag = new();
 		tag.ID = ID;
 		tag.sibling = sibling;
-		tag.tagType = Tag.TagType.Member;
+		tag.tagType = TagType.Member;
 
 		for(; lines[current].StartsWith(' '); ++current)
 		{
@@ -348,7 +348,7 @@ public partial class CompilationUnit: Tag
 		Tag tag = new();
 		tag.ID = ID;
 		tag.sibling = sibling;
-		tag.tagType = Tag.TagType.GlobalVar;
+		tag.tagType = TagType.GlobalVar;
 
 		for(; lines[current].StartsWith(' '); ++current)
 		{
@@ -373,7 +373,7 @@ public partial class CompilationUnit: Tag
 		Tag tag = new();
 		tag.ID = ID;
 		tag.sibling = sibling;
-		tag.tagType = Tag.TagType.FunctionPointer;
+		tag.tagType = TagType.FunctionPointer;
 
 		for(; lines[current].StartsWith(' '); ++current)
 		{
@@ -395,7 +395,7 @@ public partial class CompilationUnit: Tag
 		Tag tag = new();
 		tag.ID = ID;
 		tag.sibling = sibling;
-		tag.tagType = Tag.TagType.PtrToMemberFunc;
+		tag.tagType = TagType.PtrToMemberFunc;
 
 		for(; lines[current].StartsWith(' '); ++current)
 		{
@@ -429,7 +429,7 @@ public partial class CompilationUnit: Tag
 		tag.sibling = sibling;
 
 		// This is a global variable OR a member
-		tag.tagType = Tag.TagType.Padding;
+		tag.tagType = TagType.Padding;
 
 		for(; lines[current].StartsWith(' '); ++current)
 		{

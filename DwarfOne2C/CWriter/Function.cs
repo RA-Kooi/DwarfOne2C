@@ -2,8 +2,6 @@ using System.Collections.Generic;
 
 namespace DwarfOne2C
 {
-using TagType = Tag.TagType;
-
 public partial class CWriter
 {
 	private static List<string> GenerateFunction(

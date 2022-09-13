@@ -11,6 +11,30 @@ public enum AccessLevel
 	Protected,
 }
 
+public enum TagType
+{
+	Tag,
+	End,
+	ArrayType,
+	CULocalFunc,
+	Class,
+	Enum,
+	FunctionPointer,
+	GlobalFunc,
+	GlobalVar, // In reverse order unless class var?
+	Inheritance,
+	LocalVar, // NOT in reverse order
+	Member, // Class, struct, or union member
+	Param,
+	PtrToMemberFunc,
+	Struct,
+	TypeDef, // In reverse order
+	Union,
+	Padding, // Local variable OR member...
+	MemberFunc,
+	VariadicParam,
+}
+
 public class Tag
 {
 	public int ID;
@@ -25,30 +49,6 @@ public class Tag
 
 	// Empty tag ID
 	public static readonly int NoSibling = -1;
-
-	public enum TagType
-	{
-		Tag,
-		End,
-		ArrayType,
-		CULocalFunc,
-		Class,
-		Enum,
-		FunctionPointer,
-		GlobalFunc,
-		GlobalVar, // In reverse order unless class var?
-		Inheritance,
-		LocalVar, // NOT in reverse order
-		Member, // Class, struct, or union member
-		Param,
-		PtrToMemberFunc,
-		Struct,
-		TypeDef, // In reverse order
-		Union,
-		Padding, // Local variable OR member...
-		MemberFunc,
-		VariadicParam,
-	}
 
 	public TagType tagType;
 

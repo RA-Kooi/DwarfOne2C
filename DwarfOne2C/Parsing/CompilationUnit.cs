@@ -53,7 +53,7 @@ public partial class CompilationUnit: Tag
 								ref current,
 								ID,
 								sibling,
-								Tag.TagType.Class));
+								TagType.Class));
 					} break;
 					case "TAG_enumeration_type":
 					{
@@ -77,7 +77,7 @@ public partial class CompilationUnit: Tag
 							ref current,
 							ID,
 							sibling,
-							Tag.TagType.GlobalFunc);
+							TagType.GlobalFunc);
 
 						allTags.Add(tag);
 					} break;
@@ -120,7 +120,7 @@ public partial class CompilationUnit: Tag
 								ref current,
 								ID,
 								sibling,
-								Tag.TagType.Struct));
+								TagType.Struct));
 					} break;
 					case "TAG_subroutine":
 					{
@@ -130,7 +130,7 @@ public partial class CompilationUnit: Tag
 								ref current,
 								ID,
 								sibling,
-								Tag.TagType.CULocalFunc);
+								TagType.CULocalFunc);
 
 						tag.isStatic = true;
 
@@ -164,7 +164,7 @@ public partial class CompilationUnit: Tag
 								ref current,
 								ID,
 								sibling,
-								Tag.TagType.Union));
+								TagType.Union));
 					} break;
 					case "TAG_padding":
 					{
@@ -204,7 +204,7 @@ public partial class CompilationUnit: Tag
 				Tag endTag = new();
 				endTag.ID = ID;
 				endTag.sibling = Tag.NoSibling;
-				endTag.tagType = Tag.TagType.End;
+				endTag.tagType = TagType.End;
 
 				allTags.Add(endTag);
 				IDToIndex.Add(ID, allTags.Count - 1);
@@ -379,13 +379,13 @@ public partial class CompilationUnit: Tag
 		{
 			switch(tag.tagType)
 			{
-			case Tag.TagType.CULocalFunc:
-			case Tag.TagType.Class:
-			case Tag.TagType.Enum:
-			case Tag.TagType.GlobalVar:
-			case Tag.TagType.GlobalFunc:
-			case Tag.TagType.Struct:
-			case Tag.TagType.LocalVar:
+			case TagType.CULocalFunc:
+			case TagType.Class:
+			case TagType.Enum:
+			case TagType.GlobalVar:
+			case TagType.GlobalFunc:
+			case TagType.Struct:
+			case TagType.LocalVar:
 			{
 				if(sameNames.Contains(tag.name))
 					tag.name = $"{tag.name}_0x{tag.ID:X}";
