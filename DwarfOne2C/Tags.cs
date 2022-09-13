@@ -15,6 +15,7 @@ public enum TagType
 {
 	Tag,
 	End,
+	CompileUnit,
 	ArrayType,
 	CULocalFunc,
 	Class,

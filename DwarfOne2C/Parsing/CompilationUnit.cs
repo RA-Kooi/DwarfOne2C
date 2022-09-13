@@ -25,6 +25,8 @@ public partial class CompilationUnit: Tag
 		this.allTags = allTags;
 		this.IDToIndex = IDToIndex;
 
+		this.tagType = TagType.CompileUnit;
+
 		ID = Convert.ToInt32(
 			lines[current++].Split(
 				':',
