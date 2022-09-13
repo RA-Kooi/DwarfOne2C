@@ -130,6 +130,14 @@ public partial class CWriter
 		}
 	}
 
+	public void InsertFileDelimiter()
+	{
+		code.Add(
+			"// ------------------------------------------------------------" +
+			"--------------------");
+		code.Add("");
+	}
+
 	public void WriteCode()
 	{
 		string allDirs = Path.GetDirectoryName(outputPath);
