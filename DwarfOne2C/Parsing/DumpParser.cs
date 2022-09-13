@@ -242,27 +242,32 @@ class DumpParser
 		// Discriminate global symbols with the same name
 		List<string> sameNames = new();
 
-		for(Tag tag = allTags[IDToIndex[allTags[0].firstChild]];
-			tag.sibling != Tag.NoSibling;
-			tag = allTags[IDToIndex[tag.sibling]])
+		for(Tag CU = allTags[0];
+			CU.sibling != Tag.NoSibling;
+			CU = allTags[IDToIndex[CU.sibling]])
 		{
-			switch(tag.tagType)
+			for(Tag tag = allTags[IDToIndex[CU.firstChild]];
+				tag.sibling != Tag.NoSibling;
+				tag = allTags[IDToIndex[tag.sibling]])
 			{
-			case TagType.CULocalFunc:
-			case TagType.Class:
-			case TagType.Enum:
-			case TagType.GlobalVar:
-			case TagType.GlobalFunc:
-			case TagType.Struct:
-			case TagType.LocalVar:
-			{
-				if(sameNames.Contains(tag.name))
-					tag.name = $"{tag.name}_0x{tag.ID:X}";
-				else
-					sameNames.Add(tag.name);
-			} break;
-			default:
-				continue;
+				switch(tag.tagType)
+				{
+				case TagType.CULocalFunc:
+				case TagType.Class:
+				case TagType.Enum:
+				case TagType.GlobalVar:
+				case TagType.GlobalFunc:
+				case TagType.Struct:
+				case TagType.LocalVar:
+				{
+					if(sameNames.Contains(tag.name))
+						tag.name = $"{tag.name}_0x{tag.ID:X}";
+					else
+						sameNames.Add(tag.name);
+				} break;
+				default:
+					continue;
+				}
 			}
 		}
 	}
