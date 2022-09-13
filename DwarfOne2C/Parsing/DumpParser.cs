@@ -102,7 +102,6 @@ class DumpParser
 		// but it isn't as thorough.
 		// Method 1 is the fastest, but is the least thorough.
 		// Going with method 1 for now until I find it breaks again.
-		int idx = 1;
 		void FixChain(Tag parent, ref int i, int depth)
 		{
 			int lastIdx = 0;
@@ -113,8 +112,16 @@ class DumpParser
 
 				lastIdx = i;
 
-				if(current.tagType == TagType.End)
+				if(current.tagType == TagType.End && depth > 0)
 					return;
+				else if(current.tagType == TagType.End)
+					continue;
+
+				// Fixup the last compile unit having a sibling that doesn't
+				// exist.
+				if(current.tagType == TagType.CompileUnit
+				   && !IDToIndex.ContainsKey(current.sibling))
+					current.sibling = Tag.NoSibling;
 
 				if(prev.sibling != current.ID
 				   && prev.tagType != TagType.CompileUnit)
@@ -129,6 +136,7 @@ class DumpParser
 			}
 		}
 
+		int idx = 0;
 		FixChain(allTags[0], ref idx, 0);
 
 		void Recurse(Tag parent, int depth)
