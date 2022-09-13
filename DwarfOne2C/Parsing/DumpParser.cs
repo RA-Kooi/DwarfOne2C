@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace DwarfOne2C
@@ -50,11 +51,13 @@ class DumpParser
 		}
 	}
 
-	public CompilationUnit Parse(string compilationUnit)
+	public HashSet<CompilationUnit> Parse()
 	{
 		// Parse global variables
 		//	if var has AT_lo_user -> static class/struct variable (C++)
 		//	else append to globals list
+
+		HashSet<CompilationUnit> units = new(100);
 
 		for(current = start; current < lines.Length; ++current)
 		{
@@ -67,12 +70,10 @@ class DumpParser
 					string line = lines[current].TrimStart();
 					if(line.StartsWith("AT_name"))
 					{
-						string name = line.Substring(9, line.Length - 11);
-						if(name.ToLower() == compilationUnit.ToLower())
-						{
-							current = cuStart;
-							return ParseCompilationUnit();
-						}
+						current = cuStart;
+
+						CompilationUnit unit = ParseCompilationUnit();
+						units.Add(unit);
 					}
 					else if(line == string.Empty)
 						break;
@@ -80,7 +81,7 @@ class DumpParser
 			}
 		}
 
-		return null;
+		return units;
 	}
 
 	private CompilationUnit ParseCompilationUnit()
