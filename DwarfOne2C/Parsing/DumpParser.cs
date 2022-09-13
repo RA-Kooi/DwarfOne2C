@@ -116,7 +116,8 @@ class DumpParser
 				if(current.tagType == TagType.End)
 					return;
 
-				if(prev.sibling != current.ID)
+				if(prev.sibling != current.ID
+				   && prev.tagType != TagType.CompileUnit)
 					prev.sibling = current.ID;
 
 				if(current.firstChild >= 0)
