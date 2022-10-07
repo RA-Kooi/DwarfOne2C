@@ -192,25 +192,32 @@ class DumpParser
 
 		Recurse(allTags[0], 0);
 
+		void FixDirtyTag(Tag tag)
+		{
+			// Fixup size
+			int index = IDToIndex[tag.typeID];
+			Tag referenced = allTags[index];
+
+			if(referenced.isDirty)
+				FixDirtyTag(referenced);
+
+			int referencedSize = referenced.size * tag.length;
+			tag.size = tag.isPointer
+				? 4
+				: tag.isReference
+				? referencedSize
+				: tag.size;
+
+			tag.isDirty = false;
+		}
+
 		foreach(Tag tag in allTags)
 		{
 			tag.modifiers.Reverse();
 
 			if(tag.isDirty)
 			{
-				// Fixup size
-				int index = IDToIndex[tag.typeID];
-				Tag referenced = allTags[index];
-
-				if(referenced.isDirty)
-					throw new NotImplementedException("referenced is dirty");
-
-				int referencedSize = referenced.size * tag.length;
-				tag.size = tag.isPointer
-					? 4
-					: tag.isReference
-					? referencedSize
-					: tag.size;
+				FixDirtyTag(tag);
 			}
 
 			// Fixup staticness of functions
