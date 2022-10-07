@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace DwarfOne2C
@@ -101,43 +102,118 @@ class DumpParser
 		// computational explosion issue. Method 3 is the easiest to implement,
 		// but it isn't as thorough.
 		// Method 1 is the fastest, but is the least thorough.
-		// Going with method 1 for now until I find it breaks again.
-		void FixChain(Tag parent, ref int i, int depth)
+		// So method 1 turns out to break now that we parse all the information
+		// at once. We'll go with method 2 until it breaks again.
+		void FixChain()
 		{
-			int lastIdx = 0;
-			for(; i < allTags.Count; ++i)
+			bool CanHaveChildren(Tag tag)
+			{
+				return tag.tagType == TagType.CompileUnit
+					|| tag.tagType == TagType.Class
+					|| tag.tagType == TagType.GlobalFunc
+					|| tag.tagType == TagType.Struct
+					|| tag.tagType == TagType.CULocalFunc
+					|| tag.tagType == TagType.FunctionPointer
+					|| tag.tagType == TagType.Union;
+			}
+
+			Dictionary<int, int> refCounts = new();
+
+			for(int i = 0; i < allTags.Count; ++i)
 			{
 				Tag current = allTags[i];
-				Tag prev = allTags[lastIdx];
 
-				lastIdx = i;
-
-				if(current.tagType == TagType.End && depth > 0)
-					return;
-				else if(current.tagType == TagType.End)
+				if(current.tagType == TagType.End)
 					continue;
 
-				// Fixup the last compile unit having a sibling that doesn't
-				// exist.
+				int value = 0;
+
+				refCounts.TryGetValue(current.sibling, out value);
+				refCounts[current.sibling] = value + 1;
+			}
+
+			refCounts.Where(kvp => kvp.Value <= 1)
+				.Select(kvp => kvp.Key)
+				.All(
+					key =>
+					{
+						refCounts.Remove(key);
+						return true;
+					});
+
+			foreach(KeyValuePair<int, int> tagRefCount in refCounts)
+			{
+				int refID = IDToIndex[tagRefCount.Key];
+				Tag referenced = allTags[refID];
+
+				int CUIndex = allTags.FindLastIndex(
+					refID,
+					tag => tag.tagType == TagType.CompileUnit);
+
+				List<Tag> searchRange = allTags
+					.GetRange(CUIndex, refID - CUIndex);
+
+				List<Tag> referencingTags = searchRange
+					.Where(tag => tag.sibling == tagRefCount.Key)
+					.ToList();
+
+				Tag left = referencingTags[0];
+				Tag right = referencingTags[1];
+
+				while(true)
+				{
+					do
+					{
+						Tag result = searchRange.Find(
+							tag => tag.sibling == right.ID);
+
+						if(result == null)
+							break;
+
+						right = result;
+					} while(true);
+
+					if(left.sibling < right.ID)
+					{
+						left = allTags[IDToIndex[left.sibling]];
+						continue;
+					}
+
+					left.sibling = right.ID;
+
+					left = right;
+					referencingTags.RemoveAt(0);
+
+					int rightIdx = Math.Min(1, referencingTags.Count - 1);
+					right = referencingTags[rightIdx];
+
+					if(rightIdx == 0)
+						break;
+				}
+			}
+
+			// Fix child tags
+			for(int i = 1; i < allTags.Count; ++i)
+			{
+				Tag current = allTags[i];
+				Tag prev = allTags[i - 1];
+
+				if(current.tagType == TagType.End)
+					continue;
+
+				// Fixup the last compile unit having a sibling that
+				// doesn't exist.
 				if(current.tagType == TagType.CompileUnit
 				   && !IDToIndex.ContainsKey(current.sibling))
 					current.sibling = Tag.NoSibling;
 
 				if(prev.sibling != current.ID
-				   && prev.tagType != TagType.CompileUnit)
-					prev.sibling = current.ID;
-
-				if(current.firstChild >= 0)
-				{
-					++i;
-					FixChain(current, ref i, depth + 1);
-					continue;
-				}
+				   && CanHaveChildren(prev))
+					prev.firstChild = current.ID;
 			}
 		}
 
-		int idx = 0;
-		FixChain(allTags[0], ref idx, 0);
+		FixChain();
 
 		void Recurse(Tag parent, int depth)
 		{
