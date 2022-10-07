@@ -185,12 +185,17 @@ class DumpParser
 					|| child.tagType == TagType.Struct)
 				   && child.firstChild != -1)
 				{
-					Recurse(child, 1);
+					Recurse(child, depth + 1);
 				}
 			}
 		}
 
-		Recurse(allTags[0], 0);
+		for(Tag CU = allTags[0];
+			CU.sibling != Tag.NoSibling;
+			CU = allTags[IDToIndex[CU.sibling]])
+		{
+			Recurse(CU, 0);
+		}
 
 		void FixDirtyTag(Tag tag)
 		{
