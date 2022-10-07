@@ -446,7 +446,7 @@ public partial class CompilationUnit: Tag
 					&& !ParseLoUser(line, tag)
 					&& !ParseAtMember(line, tag)
 					&& !ParseReference(line, tag)
-					&& !line.StartsWith("AT_location"))
+					&& !ParseLocation(line, tag))
 				Console.Error.WriteLine("Unkown attribute: " + line + " @" + current);
 		}
 
