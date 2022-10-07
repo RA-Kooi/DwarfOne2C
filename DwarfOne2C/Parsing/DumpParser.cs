@@ -255,13 +255,13 @@ class DumpParser
 			}
 		}
 
-		// Discriminate global symbols with the same name
-		List<string> sameNames = new();
-
 		for(Tag CU = allTags[0];
 			CU.sibling != Tag.NoSibling;
 			CU = allTags[IDToIndex[CU.sibling]])
 		{
+			// Discriminate global symbols with the same name
+			List<string> sameNames = new();
+
 			for(Tag tag = allTags[IDToIndex[CU.firstChild]];
 				tag.sibling != Tag.NoSibling;
 				tag = allTags[IDToIndex[tag.sibling]])
