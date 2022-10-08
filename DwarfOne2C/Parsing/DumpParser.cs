@@ -55,6 +55,8 @@ public partial class DumpParser
 
 		Parse(lines, current);
 
+		ApplyInitialFixes();
+
 		return units;
 	}
 
@@ -258,6 +260,63 @@ public partial class DumpParser
 				allTags.Add(endTag);
 				IDToIndex.Add(ID, allTags.Count - 1);
 			}
+		}
+	}
+
+	private void ApplyInitialFixes()
+	{
+		// Fix the last CU not having a sibling.
+		for(Tag CU = allTags[0]; ;)
+		{
+			int nextIdx;
+			if(!IDToIndex.TryGetValue(CU.sibling, out nextIdx))
+			{
+				CU.sibling = Tag.NoSibling;
+				break;
+			}
+
+			CU = allTags[IDToIndex[CU.sibling]];
+		}
+
+		void FixDirtyTag(Tag tag)
+		{
+			// Fixup size
+			Tag referenced = allTags[IDToIndex[tag.typeID]];
+
+			if(referenced.isDirty)
+				FixDirtyTag(referenced);
+
+			int referencedSize = referenced.size * tag.length;
+			tag.size = tag.isPointer
+				? 4
+				: tag.isReference
+					? referencedSize
+					: tag.size;
+
+			tag.isDirty = false;
+		}
+
+		foreach(Tag tag in allTags)
+		{
+			// Make sure modifiers are in the correct order when writing code.
+			tag.modifiers.Reverse();
+
+			// Fixup tags not having a size (yet)
+			if(tag.isDirty)
+				FixDirtyTag(tag);
+
+			// Fixup sizes of unknown types
+			if(tag.typeID == (int)Type.BuiltInType.Unknown)
+			{
+				Tag sibling = allTags[IDToIndex[tag.sibling]];
+
+				if(sibling.tagType != TagType.End)
+					tag.size = sibling.location - tag.location;
+			}
+
+			// Fixup weird invalid names
+			if(tag.name != null && tag.name.StartsWith('@'))
+				tag.name = $"__anon_0x{tag.ID:X}";
 		}
 	}
 }
