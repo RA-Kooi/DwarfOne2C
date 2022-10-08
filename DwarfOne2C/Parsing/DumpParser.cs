@@ -51,13 +51,21 @@ public partial class DumpParser
 
 	public List<RootTag> Parse()
 	{
-		List<RootTag> units = new(100);
+		List<CompilationUnit> units = new(100);
 
 		Parse(lines, current);
 
 		ApplyInitialFixes();
 
-		return units;
+		for(Tag CU = allTags[0];
+			CU.sibling != Tag.NoSibling;
+			CU = allTags[IDToIndex[CU.sibling]])
+		{
+			CompilationUnit unit = new(allTags, IDToIndex, CU);
+			units.Add(unit);
+		}
+
+		return new();
 	}
 
 	private void Parse(string[] lines, int current)
