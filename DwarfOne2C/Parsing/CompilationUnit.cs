@@ -25,6 +25,8 @@ public class CompilationUnit
 		root = new(CURoot);
 
 		AddNodeChildren(allTags, IDToIndex, root);
+
+		ApplyFixes();
 	}
 
 	private void AddNodeChildren(
@@ -62,6 +64,84 @@ public class CompilationUnit
 		foreach(Node child in node.children)
 		{
 			AddNodeChildren(allTags, IDToIndex, child);
+		}
+	}
+
+	private void ApplyFixes()
+	{
+		void FixFunclet(Node parent, int depth)
+		{
+			foreach(Node childNode in parent.children)
+			{
+				Tag child = childNode.tag;
+
+				// Fix TAG_padding being member variables, global variables,
+				// and global functions at the same time.
+				if(child.tagType == TagType.Padding)
+				{
+					child.tagType = child.isFunction
+						? TagType.GlobalFunc
+						: depth == 0
+							? TagType.GlobalVar
+							: TagType.MemberFunc;
+				}
+				else if(child.tagType == TagType.GlobalFunc)
+				{
+					if(depth > 0)
+					{
+						// Remove staticness from functions that are not top
+						// level.
+						child.isStatic = false;
+
+						// It is also a class/struct member function in this
+						// case.
+						child.tagType = TagType.MemberFunc;
+					}
+
+					// Fixup missing type of functions.
+					if(child.typeID == 0)
+						child.typeID = (int)Type.BuiltInType.Void;
+
+					// Fixup staticness of functions.
+					if(child.isStatic && childNode.children.Count > 0)
+					{
+						Node firstChild = childNode.children[0];
+						if(firstChild.tag.name == "this")
+							child.isStatic = false;
+					}
+				}
+
+				FixFunclet(childNode, depth + 1);
+			}
+		}
+
+		FixFunclet(root, 0);
+
+		List<string> sameNames = new();
+
+		foreach(Node childNode in root.children)
+		{
+			Tag child = childNode.tag;
+
+			switch(child.tagType)
+			{
+			case TagType.CULocalFunc:
+			case TagType.Class:
+			case TagType.Struct:
+			case TagType.Union:
+			case TagType.Enum:
+			case TagType.GlobalVar:
+			case TagType.GlobalFunc:
+			case TagType.LocalVar:
+			{
+				if(sameNames.Contains(child.name))
+					child.name = $"{child.name}_0x{child.ID:X}";
+				else
+					sameNames.Add(child.name);
+			} break;
+			default:
+				continue;
+			}
 		}
 	}
 }
