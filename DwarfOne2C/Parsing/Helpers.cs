@@ -2,7 +2,7 @@ using System;
 
 namespace DwarfOne2C
 {
-public partial class CompilationUnit: Tag
+public partial class DumpParser
 {
 	private static bool ParseName(string line, Tag tag)
 	{

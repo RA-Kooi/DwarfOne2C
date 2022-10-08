@@ -3,8 +3,52 @@ using System.Text.RegularExpressions;
 
 namespace DwarfOne2C
 {
-public partial class CompilationUnit: Tag
+public partial class DumpParser
 {
+	private RootTag ParseCompileUnit(
+		string[] lines,
+		ref int current,
+		int ID,
+		int sibling)
+	{
+		RootTag tag = new(ID, sibling);
+
+		for(; current < lines.Length; ++current)
+		{
+			if(lines[current] == string.Empty)
+				break;
+
+			string line = lines[current].TrimStart();
+
+			if(ParseName(line, tag))
+			{
+				; // Nothing
+			}
+			else if(line.StartsWith("AT_language"))
+			{
+				string language = line.Substring(12, line.Length - 13);
+
+				if(language == "LANG_C_PLUS_PLUS")
+				{
+					tag.language = RootTag.Language.Cpp;
+				}
+				else if(language.StartsWith("LANG_C"))
+				{
+					tag.language = RootTag.Language.C;
+				}
+				else
+				{
+					throw new NotImplementedException(
+						"Unimplemented language tag.");
+				}
+			}
+			else
+				Console.Error.WriteLine($"Unknown attribute: {line} @{current}");
+		}
+
+		return tag;
+	}
+
 	private Tag ParseStruct(
 		string[] lines,
 		ref int current,

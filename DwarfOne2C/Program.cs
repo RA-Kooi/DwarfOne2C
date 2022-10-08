@@ -107,14 +107,14 @@ class Program
 
 			DumpParser parser = new(dumpFile.FullName);
 
-			HashSet<CompilationUnit> units = parser.Parse();
+			List<RootTag> units = parser.Parse();
 
-			Dictionary<string, List<CompilationUnit>> sharedNames = new();
+			Dictionary<string, List<RootTag>> sharedNames = new();
 
-			foreach(CompilationUnit unit in units)
+			foreach(RootTag unit in units)
 			{
 				sharedNames.TryAdd(unit.name, new());
-				List<CompilationUnit> sharers = sharedNames[unit.name];
+				List<RootTag> sharers = sharedNames[unit.name];
 
 				sharers.AddRange(units.Where(c => c.name == unit.name));
 			}

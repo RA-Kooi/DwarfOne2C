@@ -20,7 +20,7 @@ public partial class CWriter
 	}
 
 	public void GenerateCode(
-		CompilationUnit unit,
+		RootTag unit,
 		List<Tag> allTags,
 		Dictionary<int, int> IDToIndex)
 	{
@@ -37,7 +37,9 @@ public partial class CWriter
 
 		Tag current = allTags[IDToIndex[unit.firstChild]];
 
-		List<Tag> memberFuncs = unit.childTags
+		// TODO
+		List<Tag> memberFuncs = new(), staticMembers = new();
+		/*List<Tag> memberFuncs = unit.childTags
 			.Where(i => i.tagType == TagType.GlobalFunc && i.memberOfID >= 0)
 			.ToList();
 
@@ -51,7 +53,7 @@ public partial class CWriter
 		List<Tag> staticMembers = unit.childTags
 			.Where(i => i.tagType == TagType.GlobalVar)
 			.Where(predicate)
-			.ToList();
+			.ToList();*/
 
 		for(;
 			current.sibling != Tag.NoSibling;

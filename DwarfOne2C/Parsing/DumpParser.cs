@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DwarfOne2C
 {
-class DumpParser
+public partial class DumpParser
 {
 	private string[] lines;
 	private int start, current;
@@ -49,34 +49,216 @@ class DumpParser
 		}
 	}
 
-	public HashSet<CompilationUnit> Parse()
+	public List<RootTag> Parse()
 	{
-		// Parse global variables
-		//	if var has AT_lo_user -> static class/struct variable (C++)
-		//	else append to globals list
+		List<RootTag> units = new(100);
 
-		HashSet<CompilationUnit> units = new(100);
-
-		for(current = start; current < lines.Length; ++current)
-		{
-			if(lines[current].EndsWith("TAG_compile_unit"))
-			{
-				CompilationUnit unit = new(
-					allTags,
-					IDToIndex,
-					lines,
-					ref current);
-
-				Console.Error.WriteLine(unit.name);
-				Console.Error.Flush();
-
-				unit.Parse(lines, current);
-
-				units.Add(unit);
-			}
-		}
+		Parse(lines, current);
 
 		return units;
+	}
+
+	private void Parse(string[] lines, int current)
+	{
+		for(; current < lines.Length; ++current)
+		{
+			if(lines[current].Contains("TAG_"))
+			{
+				string[] tagLine = lines[current++].Split(
+					" ",
+					StringSplitOptions.RemoveEmptyEntries);
+
+				int ID = Convert.ToInt32(tagLine[0].TrimEnd(':'), 16);
+
+				string siblingAttr = lines[current++].TrimStart();
+				int sibling = Convert.ToInt32(
+					siblingAttr.Substring(11, siblingAttr.Length - 12),
+					16);
+
+				switch(tagLine[2])
+				{
+					case "TAG_compile_unit":
+					{
+						RootTag unit = ParseCompileUnit(
+							lines,
+							ref current,
+							ID,
+							sibling);
+
+						allTags.Add(unit);
+
+						Console.Error.WriteLine(unit.name);
+						Console.Error.Flush();
+					} break;
+					case "TAG_array_type":
+					{
+						allTags.Add(ParseArray(lines, ref current, ID, sibling));
+					} break;
+					case "TAG_class_type":
+					{
+						allTags.Add(
+							ParseStruct(
+								lines,
+								ref current,
+								ID,
+								sibling,
+								TagType.Class));
+					} break;
+					case "TAG_enumeration_type":
+					{
+						allTags.Add(ParseEnum(lines, ref current, ID, sibling));
+					} break;
+					case "TAG_formal_parameter":
+					{
+						allTags.Add(
+							ParseParameter(lines, ref current, ID, sibling, false));
+					} break;
+					case "TAG_unspecified_parameters":
+					{
+						allTags.Add(
+							ParseParameter(lines, ref current, ID, sibling, true));
+					} break;
+					case "TAG_global_subroutine":
+					{
+						// function
+						Tag tag = ParseFunction(
+							lines,
+							ref current,
+							ID,
+							sibling,
+							TagType.GlobalFunc);
+
+						allTags.Add(tag);
+					} break;
+					case "TAG_global_variable":
+					{
+						// global var or static member
+						allTags.Add(
+							ParseGlobalVariable(lines, ref current, ID, sibling));
+					} break;
+					case "TAG_inheritance":
+					{
+						allTags.Add(
+							ParseInheritance(lines, ref current, ID, sibling));
+					} break;
+					case "TAG_local_variable":
+					{
+						// Function/CU local var
+						allTags.Add(
+							ParseLocalVariable(lines, ref current, ID, sibling));
+					} break;
+					case "TAG_member":
+					{
+						// struct, class, or union member
+						allTags.Add(ParseMember(lines, ref current, ID, sibling));
+					} break;
+					case "TAG_ptr_to_member_type":
+					{
+						allTags.Add(
+							ParsePointerToMemberFunc(
+								lines,
+								ref current,
+								ID,
+								sibling));
+					} break;
+					case "TAG_structure_type":
+					{
+						allTags.Add(
+							ParseStruct(
+								lines,
+								ref current,
+								ID,
+								sibling,
+								TagType.Struct));
+					} break;
+					case "TAG_subroutine":
+					{
+						// (static) function local to CU
+						Tag tag = ParseFunction(
+								lines,
+								ref current,
+								ID,
+								sibling,
+								TagType.CULocalFunc);
+
+						tag.isStatic = true;
+
+						allTags.Add(tag);
+					} break;
+					case "TAG_subroutine_type":
+					{
+						// function pointer
+						allTags.Add(
+							ParseFunctionPointer(
+								lines,
+								ref current,
+								ID,
+								sibling));
+					} break;
+					case "TAG_typedef":
+					{
+						// static class member
+						// Listed in reverse order from .h file
+						// OR an actual typedef, but this looks to be unused
+						// outside of classes
+						allTags.Add(
+							ParseTypedef(lines, ref current, ID, sibling));
+					} break;
+					case "TAG_union_type":
+					{
+						// union
+						allTags.Add(
+							ParseStruct(
+								lines,
+								ref current,
+								ID,
+								sibling,
+								TagType.Union));
+					} break;
+					case "TAG_padding":
+					{
+						// What the fuck is wrong with Metrowerks's DWARF
+						// implementation. This is either a global variable
+						// OR a global function. Of course it can also be
+						// static and we only have heuristics to know.
+						// Guess who just came back 🤡
+						// It turns out that this can also be a local member
+						// variable. So we have to go and fix that up in the
+						// second pass as well.
+						allTags.Add(ParsePadding(lines, ref current, ID, sibling));
+					} break;
+					default:
+					{
+						Console.Error.WriteLine("Unknown TAG type: " + tagLine[2]);
+					} break;
+				}
+
+				IDToIndex.Add(ID, allTags.Count - 1);
+
+				// If prev->sibling != ID
+				int prevSibling = allTags[allTags.Count - 2].sibling;
+
+				if(prevSibling != ID && prevSibling != sibling)
+					allTags[allTags.Count - 2].firstChild = ID;
+			}
+
+			if(lines[current].EndsWith("<4>"))
+			{
+				int ID = Convert.ToInt32(
+					lines[current].Split(
+						":",
+						StringSplitOptions.RemoveEmptyEntries)[0],
+					16);
+
+				Tag endTag = new();
+				endTag.ID = ID;
+				endTag.sibling = Tag.NoSibling;
+				endTag.tagType = TagType.End;
+
+				allTags.Add(endTag);
+				IDToIndex.Add(ID, allTags.Count - 1);
+			}
+		}
 	}
 }
 }

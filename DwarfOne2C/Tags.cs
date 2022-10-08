@@ -138,6 +138,24 @@ public class Tag
 	public List<int> references = new();
 }
 
+public class RootTag: Tag
+{
+	public enum Language
+	{
+		C,
+		Cpp
+	};
+
+	public Language language;
+
+	public RootTag(int ID, int sibling)
+	{
+		this.ID = ID;
+		this.sibling = sibling;
+		this.tagType = TagType.CompileUnit;
+	}
+}
+
 public class Type
 {
 	public enum BuiltInType
