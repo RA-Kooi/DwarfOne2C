@@ -10,6 +10,7 @@ public class Node
 	public Node(Tag tag)
 	{
 		this.tag = tag;
+		children = new();
 	}
 }
 
