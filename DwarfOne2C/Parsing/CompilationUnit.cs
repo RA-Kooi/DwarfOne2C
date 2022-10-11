@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DwarfOne2C
 {
@@ -44,6 +45,8 @@ public class CompilationUnit
 		root = new(CURoot);
 
 		AddNodeChildren(allTags, IDToIndex, root);
+
+		FindStrays(allTags, IDToIndex);
 
 		ApplyFixes();
 	}
@@ -180,6 +183,118 @@ public class CompilationUnit
 			default:
 				continue;
 			}
+		}
+	}
+
+	void FindStrays(List<Tag> allTags, Dictionary<int, int> IDToIndex)
+	{
+		Dictionary<int, int> refCounts = new();
+
+		int end = root.tag.sibling == Tag.NoSibling
+			? allTags.Count
+			: IDToIndex[root.tag.sibling];
+
+		for(int i = IDToIndex[root.tag.ID]; i < end; ++i)
+		{
+			Tag current = allTags[i];
+
+			if(current.tagType == TagType.End)
+				continue;
+
+			int value = 0;
+
+			refCounts.TryGetValue(current.sibling, out value);
+			refCounts[current.sibling] = value + 1;
+		}
+
+		refCounts.Where(kvp => kvp.Value <= 1)
+			.Select(kvp => kvp.Key)
+			.All(
+				key =>
+				{
+					refCounts.Remove(key);
+					return true;
+				});
+
+		Node FindParent(Node parent, int tagID)
+		{
+			Node result = parent.children.Find(n => n.tag.ID == tagID);
+
+			if(result != null)
+				return parent;
+
+			foreach(Node child in parent.children)
+			{
+				result = FindParent(child, tagID);
+
+				if(result != null)
+					return result;
+			}
+
+			return null;
+		}
+
+		foreach(KeyValuePair<int, int> tagRefCount in refCounts)
+		{
+			int refIdx = IDToIndex[tagRefCount.Key];
+			Tag referenced = allTags[refIdx];
+
+			int CUIdx = IDToIndex[root.tag.ID];
+
+			List<Tag> searchRange = allTags.GetRange(CUIdx, refIdx - CUIdx);
+			List<Tag> referencingTags = searchRange
+				.Where(tag => tag.sibling == tagRefCount.Key)
+				.ToList();
+
+			System.Diagnostics.Debug.Assert(referencingTags.Count == 2);
+
+			// Look for the referencing ID, as the current key can be an end tag.
+			Node parent = FindParent(root, referencingTags[0].ID);
+
+			int leftIdx = parent.children
+				.FindIndex(n => n.tag.ID == referencingTags[0].ID);
+
+			Node left = parent.children[leftIdx];
+
+			Tag stray = referencingTags[1];
+
+			while(true)
+			{
+				Tag result = null;
+
+				// Faster backward search...
+				for(int i = IDToIndex[stray.ID]; i > CUIdx; --i)
+				{
+					Tag current = allTags[i];
+
+					if(current.sibling == stray.ID)
+					{
+						result = current;
+						break;
+					}
+				}
+
+				if(result == null)
+					break;
+
+				stray = result;
+			}
+
+			left.tag.sibling = stray.ID;
+
+			List<Node> newChildren = new();
+
+			while(stray.ID != tagRefCount.Key)
+			{
+				Node right = new(stray);
+				AddNodeChildren(allTags, IDToIndex, right);
+
+				newChildren.Add(right);
+
+				stray = allTags[IDToIndex[stray.sibling]];
+			}
+
+			parent.children.InsertRange(leftIdx + 1, newChildren);
 		}
 	}
 }
