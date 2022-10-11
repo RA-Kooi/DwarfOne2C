@@ -71,23 +71,25 @@ public partial class CWriter
 	private static (string part1, string part2) GetArray(
 		List<Tag> allTags,
 		Dictionary<int, int> IDToIndex,
-		Tag current)
+		Node CU,
+		List<Node> allCUs,
+		Node current)
 	{
 		string type, part2 = "";
 
-		if(current.typeID > 0)
+		if(current.tag.typeID > 0)
 		{
-			(type, part2) = GetType(allTags, IDToIndex, current);
+			(type, part2) = GetType(allTags, IDToIndex, CU, allCUs, current);
 		}
 		else
 		{
-			type = GetTypeName(allTags, IDToIndex, current);
-			type += GetModifiers(allTags, IDToIndex, current);
+			type = GetTypeName(allTags, IDToIndex, current.tag);
+			type += GetModifiers(allTags, IDToIndex, current.tag);
 		}
 
-		if (current.isMultidimArray)
+		if (current.tag.isMultidimArray)
 		{
-			foreach (int len in current.arrayDimLengths)
+			foreach (int len in current.tag.arrayDimLengths)
 			{
 				part2 = string.Format(
 					"[{0}]",
@@ -101,9 +103,9 @@ public partial class CWriter
 		{
 			part2 = string.Format(
 				"[{0}]",
-				current.length < 0
+				current.tag.length < 0
 					? ""
-					: "" + (current.length + 1))
+					: "" + (current.tag.length + 1))
 				+ part2;
 		}
 
@@ -113,9 +115,13 @@ public partial class CWriter
 	private static (string part1, string part2) GetFunctionPointer(
 		List<Tag> allTags,
 		Dictionary<int, int> IDToIndex,
-		Tag current,
+		Node CU,
+		List<Node> allCUs,
+		Node pointerNode,
 		bool isMemberFunc = false)
 	{
+		Tag current = pointerNode.tag;
+
 		(string part1, string part2) = (null, "");
 
 		if(current.typeID < 0)
@@ -125,7 +131,7 @@ public partial class CWriter
 		}
 		else
 		{
-			(part1, part2) = GetType(allTags, IDToIndex, current);
+			(part1, part2) = GetType(allTags, IDToIndex, CU, allCUs, pointerNode);
 			part1 += "(";
 		}
 
@@ -133,16 +139,16 @@ public partial class CWriter
 		sb.Append(')');
 		sb.Append('(');
 
-		if(current.firstChild > -1)
+		if(pointerNode.children.Count > 0)
 		{
 			int i = 0;
-			for(Tag child = allTags[IDToIndex[current.firstChild]];
-				child.sibling != Tag.NoSibling;
-				child = allTags[IDToIndex[child.sibling]])
+			foreach(Node child in pointerNode.children)
 			{
 				(string pPart1, string pPart2) = GetType(
 					allTags,
 					IDToIndex,
+					CU,
+					allCUs,
 					child);
 
 					sb.Append(pPart1);
@@ -166,14 +172,44 @@ public partial class CWriter
 	private static (string part1, string part2) GetMemberFunctionPointer(
 		List<Tag> allTags,
 		Dictionary<int, int> IDToIndex,
-		Tag current)
+		Node CU,
+		List<Node> allCUs,
+		Node current)
 	{
-		Tag referenced = allTags[IDToIndex[current.typeID]];
-		(string part1, string part2) = GetType(allTags, IDToIndex, referenced);
+		Node referenced = CU.Find(current.tag.typeID);
 
-		Tag refClass = allTags[IDToIndex[current.memberOfID]];
+		if(referenced == null)
+		{
+			for(int i = 0; i < allCUs.Count; ++i)
+			{
+				Node unit = allCUs[i];
+
+				if(i < allCUs.Count - 2)
+				{
+					Node nextUnit = allCUs[i + 1];
+
+					if(nextUnit.tag.ID < current.tag.typeID)
+						continue;
+				}
+
+				referenced = unit.Find(current.tag.typeID);
+
+				if(referenced != null)
+					break;
+			}
+		}
+
+		(string part1, string part2) = GetType(
+			allTags,
+			IDToIndex,
+			CU,
+			allCUs,
+			referenced);
+
+		Tag refClass = allTags[IDToIndex[current.tag.memberOfID]];
+
 		part1 += refClass.name + "::";
-		part1 += GetModifiers(allTags, IDToIndex, current, false);
+		part1 += GetModifiers(allTags, IDToIndex, current.tag, false);
 
 		return (part1, part2);
 	}
@@ -181,34 +217,66 @@ public partial class CWriter
 	private static (string part1, string part2) GetType(
 		List<Tag> allTags,
 		Dictionary<int, int> IDToIndex,
-		Tag current)
+		Node CU,
+		List<Node> allCUs,
+		Node current)
 	{
 		string part1, part2 = "";
 
-		Tag referenced = current;
+		Node referenced = current;
 
-		if(current.typeID > 0)
+		if(current.tag.typeID > 0)
 		{
-			referenced = allTags[IDToIndex[current.typeID]];
+			referenced = CU.Find(current.tag.typeID);
+
+			if(referenced == null)
+			{
+				for(int i = 0; i < allCUs.Count; ++i)
+				{
+					Node unit = allCUs[i];
+
+					if(i < allCUs.Count - 2)
+					{
+						Node nextUnit = allCUs[i + 1];
+
+						if(nextUnit.tag.ID < current.tag.typeID)
+							continue;
+					}
+
+					referenced = unit.Find(current.tag.typeID);
+
+					if(referenced != null)
+						break;
+				}
+			}
 		}
 
-		if(referenced.tagType == TagType.ArrayType)
-			(part1, part2) = GetArray(allTags, IDToIndex, referenced);
-		else if(referenced.tagType == TagType.FunctionPointer)
+		if(referenced.tag.tagType == TagType.ArrayType)
 		{
-			(part1, part2) = GetFunctionPointer(allTags, IDToIndex, referenced);
+			(part1, part2) = GetArray(allTags, IDToIndex, CU, allCUs, referenced);
 		}
-		else if(referenced.tagType == TagType.PtrToMemberFunc)
+		else if(referenced.tag.tagType == TagType.FunctionPointer)
+		{
+			(part1, part2) = GetFunctionPointer(
+				allTags,
+				IDToIndex,
+				CU,
+				allCUs,
+				referenced);
+		}
+		else if(referenced.tag.tagType == TagType.PtrToMemberFunc)
 		{
 			(part1, part2) = GetMemberFunctionPointer(
 				allTags,
 				IDToIndex,
+				CU,
+				allCUs,
 				referenced);
 		}
 		else
-			part1 = GetTypeName(allTags, IDToIndex, referenced);
+			part1 = GetTypeName(allTags, IDToIndex, referenced.tag);
 
-		part1 += GetModifiers(allTags, IDToIndex, current, false);
+		part1 += GetModifiers(allTags, IDToIndex, current.tag, false);
 
 		return (part1, part2);
 	}

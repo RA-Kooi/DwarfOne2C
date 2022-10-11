@@ -8,9 +8,13 @@ public partial class CWriter
 	private static List<string> GenerateUnion(
 		List<Tag> allTags,
 		Dictionary<int, int> IDToIndex,
-		Tag current,
+		Node CU,
+		List<Node> allCUs,
+		Node unionNode,
 		int depth)
 	{
+		Tag current = unionNode.tag;
+
 		List<string> code = new();
 
 		string tabs = new('\t', depth);
@@ -21,7 +25,7 @@ public partial class CWriter
 		code.Add(string.Format("{0}union {1}", tabs, current.name));
 		code.Add(tabs + "{");
 
-		if(current.firstChild == -1)
+		if(unionNode.children.Count == 0)
 		{
 			code.Add(tabs + "};");
 			code.Add("");
@@ -29,14 +33,19 @@ public partial class CWriter
 			return code;
 		}
 
-		for(Tag child = allTags[IDToIndex[current.firstChild]];
-			child.sibling != Tag.NoSibling;
-			child = allTags[IDToIndex[child.sibling]])
+		foreach(Node childNode in unionNode.children)
 		{
+			Tag child = childNode.tag;
+
 			if(child.tagType != TagType.Member)
 				throw new NotImplementedException("?????");
 
-			(string part1, string part2) = GetType(allTags, IDToIndex, child);
+			(string part1, string part2) = GetType(
+				allTags,
+				IDToIndex,
+				CU,
+				allCUs,
+				childNode);
 
 			code.Add(
 				string.Format(
