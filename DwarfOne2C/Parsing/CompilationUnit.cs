@@ -12,6 +12,24 @@ public class Node
 		this.tag = tag;
 		children = new();
 	}
+
+	public Node Find(int tagID)
+	{
+		Node result = children.Find(n => n.tag.ID == tagID);
+
+		if(result != null)
+			return result;
+
+		foreach(Node child in children)
+		{
+			result = child.Find(tagID);
+
+			if(result != null)
+				return result;
+		}
+
+		return null;
+	}
 }
 
 public class CompilationUnit
