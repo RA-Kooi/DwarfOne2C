@@ -297,5 +297,66 @@ public class CompilationUnit
 			parent.children.InsertRange(leftIdx + 1, newChildren);
 		}
 	}
+
+	// For now unused
+	void FindStrays(List<Tag> allTags, Dictionary<int, int> IDToIndex, int unused)
+	{
+		int CountTreeSubNodes(Node node)
+		{
+			int count = node.children.Count;
+
+			foreach(Node child in node.children)
+			{
+				count += CountTreeSubNodes(child);
+			}
+
+			return count;
+		}
+
+		int CountRawSubNodes(Node left, Node right)
+		{
+			int count = 0;
+
+			int leftIdx = IDToIndex[left.tag.ID];
+			int rightIdx = IDToIndex[right.tag.ID];
+
+			for(int i = leftIdx; i < rightIdx; ++i)
+			{
+				Tag current = allTags[i];
+
+				if(current.tagType != TagType.End)
+					++count;
+			}
+
+			return count;
+		}
+
+		bool FindFunclet(Node node, int depth)
+		{
+			bool nodesMatch = true;
+
+			for(int i = 0; i < node.children.Count - 1; ++i)
+			{
+				Node left = node.children[i];
+				Node right = node.children[i + 1];
+
+				int treeSubNodes = CountTreeSubNodes(left);
+				int rawSubNodes = CountRawSubNodes(left, right);
+
+				if(treeSubNodes < rawSubNodes)
+				{
+					nodesMatch = false;
+
+					if(!FindFunclet(left, depth + 1))
+					{
+					}
+				}
+			}
+
+			return nodesMatch;
+		}
+
+		FindFunclet(root, 0);
+	}
 }
 }
