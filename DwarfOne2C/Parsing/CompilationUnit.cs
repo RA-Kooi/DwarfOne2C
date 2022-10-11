@@ -48,6 +48,22 @@ public class CompilationUnit
 
 		int childIdx = currentIdx + 1;
 
+		// It can happen that the "child" is a stray tag, try to handle that
+		// case here.
+		//
+		// However we want to skip this if the current node is a root node.
+		if(current.tagType != TagType.CompileUnit)
+		{
+			for(Tag child = allTags[childIdx];
+				child.sibling != Tag.NoSibling;
+				child = allTags[IDToIndex[child.sibling]])
+			{
+				// The adjactent tag was a stray tag, skip it.
+				if(IDToIndex[child.sibling] >= siblingIdx)
+					return;
+			}
+		}
+
 		for(Tag child = allTags[childIdx];
 			child.sibling != Tag.NoSibling;
 			child = allTags[IDToIndex[child.sibling]])
