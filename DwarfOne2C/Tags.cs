@@ -41,13 +41,6 @@ public class Tag
 	public int ID;
 	public int sibling;
 
-	// Used for Tags with child tags
-	// CompilationUnit
-	// Class
-	// Struct
-	// Union
-	public int firstChild = -1;
-
 	// Empty tag ID
 	public static readonly int NoSibling = -1;
 
