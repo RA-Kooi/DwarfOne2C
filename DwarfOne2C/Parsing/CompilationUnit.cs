@@ -99,10 +99,6 @@ public class CompilationUnit
 						child.tagType = TagType.MemberFunc;
 					}
 
-					// Fixup missing type of functions.
-					if(child.typeID == 0)
-						child.typeID = (int)Type.BuiltInType.Void;
-
 					// Fixup staticness of functions.
 					if(child.isStatic && childNode.children.Count > 0)
 					{
@@ -111,6 +107,13 @@ public class CompilationUnit
 							child.isStatic = false;
 					}
 				}
+
+				// Fixup missing type of functions.
+				if(child.typeID == 0
+				   && (child.tagType == TagType.GlobalFunc
+					   || child.tagType == TagType.CULocalFunc))
+					child.typeID = (int)Type.BuiltInType.Void;
+
 
 				FixFunclet(childNode, depth + 1);
 			}
