@@ -107,16 +107,17 @@ class Program
 
 			DumpParser parser = new(dumpFile.FullName);
 
-			List<RootTag> units = parser.Parse();
+			List<CompilationUnit> units = parser.Parse();
 
-			Dictionary<string, List<RootTag>> sharedNames = new();
+			Dictionary<string, List<CompilationUnit>> sharedNames = new();
 
-			foreach(RootTag unit in units)
+			foreach(CompilationUnit unit in units)
 			{
-				sharedNames.TryAdd(unit.name, new());
-				List<RootTag> sharers = sharedNames[unit.name];
+				Tag root = unit.root.tag;
+				sharedNames.TryAdd(root.name, new());
+				List<CompilationUnit> sharers = sharedNames[root.name];
 
-				sharers.AddRange(units.Where(c => c.name == unit.name));
+				sharers.AddRange(units.Where(c => c.root.tag.name == root.name));
 			}
 
 			sharedNames
@@ -138,6 +139,7 @@ class Program
 							{
 								writer.GenerateCode(
 									cu,
+									units,
 									parser.allTags,
 									parser.IDToIndex);
 

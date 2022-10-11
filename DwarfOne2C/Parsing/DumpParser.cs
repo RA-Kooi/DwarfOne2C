@@ -49,7 +49,7 @@ public partial class DumpParser
 		}
 	}
 
-	public List<RootTag> Parse()
+	public List<CompilationUnit> Parse()
 	{
 		List<CompilationUnit> units = new(100);
 
@@ -65,7 +65,7 @@ public partial class DumpParser
 			units.Add(unit);
 		}
 
-		return new();
+		return units;
 	}
 
 	private void Parse(string[] lines, int current)

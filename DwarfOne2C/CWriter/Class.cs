@@ -8,11 +8,15 @@ public partial class CWriter
 	private static List<string> GenerateClassStruct(
 		bool isClass,
 		List<Tag> allTags,
-		List<Tag> allMemberFuncs,
+		List<Node> allMemberFuncs,
 		Dictionary<int, int> IDToIndex,
-		Tag current,
+		Node CU,
+		List<Node> allCUs,
+		Node classNode,
 		int depth)
 	{
+		Tag current = classNode.tag;
+
 		List<string> code = new();
 
 		string tabs = new('\t', depth);
@@ -26,7 +30,7 @@ public partial class CWriter
 			isClass ? "class" : "struct",
 			current.name);
 
-		if(current.firstChild == -1)
+		if(classNode.children.Count == 0)
 		{
 			if(current.name == null)
 				code.Add(tabs + "// size: " + current.size + " bytes");
@@ -39,7 +43,7 @@ public partial class CWriter
 			return code;
 		}
 
-		Tag child = allTags[IDToIndex[current.firstChild]];
+		Tag child = classNode.children[0].tag;
 
 		bool firstInherit = true;
 		while(child.tagType == TagType.Inheritance)
@@ -60,69 +64,67 @@ public partial class CWriter
 		code.Add(line);
 		code.Add(tabs + "{");
 
-		List<Tag> children = new();
-
-		for(/* child */;
-			child.sibling != Tag.NoSibling;
-			child = allTags[IDToIndex[child.sibling]])
-		{
-			// This is perhaps not needed anymore...
-			// Work around weirdness where anonymous structs are generated
-			// with members (padding) and functions (padding) as children.
-			/*if(child.tagType == TagType.Member
-			   || child.tagType == TagType.TypeDef)*/
-				children.Add(child);
-		}
-
 		// Assume children are in the correct order
 		// Could contain unions
-		List<Tag> childrenWithLocation = children
-			.Where(i => i.location >= 0)
+		List<Node> childrenWithLocation = classNode.children
+			.Where(i => i.tag.location >= 0)
 			.ToList();
 
-		for(int i = 0; i < childrenWithLocation.Count; ++i)
+		int i = 0;
+
+		for(; i < childrenWithLocation.Count; ++i)
 		{
-			child = childrenWithLocation[i];
+			child = childrenWithLocation[i].tag;
 
 			// Detect anonymous unions
-			Tag first = childrenWithLocation
-				.First(i => i.location == child.location);
+			Node first = childrenWithLocation
+				.First(i => i.tag.location == child.location);
 
-			Tag last = childrenWithLocation
-				.Last(i => i.location == child.location);
+			Node last = childrenWithLocation
+				.Last(i => i.tag.location == child.location);
 
 			if(first != last)
 			{
 				int firstIndex = childrenWithLocation.IndexOf(first);
 				int lastIndex = childrenWithLocation.IndexOf(last);
 
-				List<Tag> slice = childrenWithLocation.GetRange(
+				List<Node> slice = childrenWithLocation.GetRange(
 					firstIndex,
 					lastIndex - firstIndex + 1);
 
 				// If all are on the same location AND all are bitfields
 				// assume it's not a union.
-				if(!slice.All(i => i.location == first.location && i.bitSize > 0))
-					slice.ForEach(i => i.isAnonUnionMember = true);
+				bool all = slice.All(
+					i =>
+					{
+						return i.tag.location == first.tag.location
+							&& i.tag.bitSize > 0;
+					});
+
+				if(!all)
+					slice.ForEach(i => i.tag.isAnonUnionMember = true);
 			}
 		}
 
-		while(children.Count > 0 && children[0].tagType == TagType.Inheritance)
-			children.RemoveAt(0);
+		while(classNode.children.Count > 0
+			  && classNode.children[0].tag.tagType == TagType.Inheritance)
+			++i;
 
 		AccessLevel accessLevel = isClass
 			? AccessLevel.Private
 			: AccessLevel.Public;
 
-		for(int i = 0; i < children.Count; ++i)
+		for(i = 0; i < classNode.children.Count; ++i)
 		{
-			child = children[i];
+			child = classNode.children[i].tag;
 
 			List<string> innerCode = TagDispatcher(
 					allTags,
 					allMemberFuncs,
 					IDToIndex,
-					child,
+					CU,
+					allCUs,
+					classNode.children[i],
 					depth + 1);
 
 			if(innerCode.Count > 0)
@@ -147,7 +149,9 @@ public partial class CWriter
 				List<string> unionCode = GenerateAnonUnion(
 					allTags,
 					IDToIndex,
-					children,
+					CU,
+					allCUs,
+					classNode.children,
 					ref i,
 					depth + 1);
 
@@ -155,7 +159,12 @@ public partial class CWriter
 			}
 			else
 			{
-				(string part1, string part2) = GetType(allTags, IDToIndex, child);
+				(string part1, string part2) = GetType(
+					allTags,
+					IDToIndex,
+					CU,
+					allCUs,
+					classNode.children[i]);
 
 					line = string.Format(
 						"{0}\t{1}{2}{3}{4}{5};{6}",
@@ -171,8 +180,8 @@ public partial class CWriter
 			}
 		}
 
-		IEnumerable<Tag> memberFuncs = allMemberFuncs
-			.Where(i => i.memberOfID == current.ID);
+		IEnumerable<Node> memberFuncs = allMemberFuncs
+			.Where(i => i.tag.memberOfID == current.ID);
 
 		// Assume all member functions are public, as we don't have the information
 		// to know their access level.
@@ -183,10 +192,16 @@ public partial class CWriter
 
 			string extraTabs = new('\t', depth + 1);
 
-			foreach(Tag memberFunc in memberFuncs)
+			foreach(Node memberFunc in memberFuncs)
 			{
 				code.AddRange(
-					GenerateFunction(allTags, IDToIndex, memberFunc, depth + 1));
+					GenerateFunction(
+						allTags,
+						IDToIndex,
+						CU,
+						allCUs,
+						memberFunc,
+						depth + 1));
 
 				code.Add("");
 			}
@@ -206,7 +221,9 @@ public partial class CWriter
 	private static List<string> GenerateAnonUnion(
 		List<Tag> allTags,
 		Dictionary<int, int> IDToIndex,
-		List<Tag> members,
+		Node CU,
+		List<Node> allCUs,
+		List<Node> members,
 		ref int index,
 		int depth)
 	{
@@ -221,11 +238,11 @@ public partial class CWriter
 		code.Add(tabs + "union");
 		code.Add(tabs + "{");
 
-		for(; members[index].isAnonUnionMember; ++index)
+		for(; members[index].tag.isAnonUnionMember; ++index)
 		{
 			string extraTabs = tabs + new string('\t', extraDepth);
 
-			Tag member = members[index];
+			Tag member = members[index].tag;
 			if(member.bitSize > 0 && !isStruct)
 			{
 				++extraDepth;
@@ -243,7 +260,7 @@ public partial class CWriter
 			{
 				if(index + 1 < members.Count)
 				{
-					Tag next = members[index + 1];
+					Tag next = members[index + 1].tag;
 
 					if(next.location < member.location && next.isAnonUnionMember)
 						goto writeMember;
@@ -261,7 +278,12 @@ writeMember:
 
 			extraTabs = tabs + new string('\t', extraDepth);
 
-			(string part1, string part2) = GetType(allTags, IDToIndex, member);
+			(string part1, string part2) = GetType(
+				allTags,
+				IDToIndex,
+				CU,
+				allCUs,
+				members[index]);
 
 			// Static not allowed in anonymous unions (YAY)
 			if(member.bitSize > 0)

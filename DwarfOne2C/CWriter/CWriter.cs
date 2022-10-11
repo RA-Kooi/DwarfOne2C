@@ -20,7 +20,8 @@ public partial class CWriter
 	}
 
 	public void GenerateCode(
-		RootTag unit,
+		CompilationUnit unit,
+		List<CompilationUnit> allUnits,
 		List<Tag> allTags,
 		Dictionary<int, int> IDToIndex)
 	{
@@ -28,39 +29,50 @@ public partial class CWriter
 		   || splitPath.EndsWith('/'))
 			splitPath = splitPath.Remove(splitPath.Length - 1);
 
-		outputPath = unit.name.Replace(splitPath, string.Empty);
+		outputPath = unit.root.tag.name.Replace(splitPath, string.Empty);
 
 		if(Path.DirectorySeparatorChar == '/')
 			outputPath = outputPath.Replace('\\', '/');
 
 		outputPath = Path.Join(outputDirectory, outputPath);
 
-		Tag current = allTags[IDToIndex[unit.firstChild]];
+		List<Node> allCUs = allUnits.Select(CU => CU.root).ToList();
 
-		// TODO
-		List<Tag> memberFuncs = new(), staticMembers = new();
-		/*List<Tag> memberFuncs = unit.childTags
-			.Where(i => i.tagType == TagType.GlobalFunc && i.memberOfID >= 0)
+		List<Node> memberFuncs = unit.root.children
+			.Where(
+				i =>
+				{
+					return i.tag.tagType == TagType.GlobalFunc
+						&& i.tag.memberOfID >= 0;
+				})
 			.ToList();
 
-		Func<Tag, bool> predicate = i =>
+		Func<Node, bool> predicate = i =>
 		{
-			return unit.childTags.Where(j => j.tagType == TagType.TypeDef)
-				.Any(j => j.name == i.name);
+			return unit.root.children
+				.Where(j => j.tag.tagType == TagType.TypeDef)
+				.Any(j => j.tag.name == i.tag.name);
 		};
 
 		// Filled by classes and structs
-		List<Tag> staticMembers = unit.childTags
-			.Where(i => i.tagType == TagType.GlobalVar)
+		List<Node> staticMembers = unit.root.children
+			.Where(i => i.tag.tagType == TagType.GlobalVar)
 			.Where(predicate)
-			.ToList();*/
+			.ToList();
 
-		for(;
-			current.sibling != Tag.NoSibling;
-			current = allTags[IDToIndex[current.sibling]])
+		foreach(Node child in unit.root.children)
 		{
+			Tag current = child.tag;
+
 			code.AddRange(
-				TagDispatcher(allTags, memberFuncs, IDToIndex, current, 0));
+				TagDispatcher(
+					allTags,
+					memberFuncs,
+					IDToIndex,
+					unit.root,
+					allCUs,
+					child,
+					0));
 
 			switch(current.tagType)
 			{
@@ -70,18 +82,30 @@ public partial class CWriter
 					continue;
 
 				code.AddRange(
-					GenerateFunction(allTags, IDToIndex, current, 0));
+					GenerateFunction(
+						allTags,
+						IDToIndex,
+						unit.root,
+						allCUs,
+						child,
+						0));
 			} break;
 			case TagType.CULocalFunc:
 			{
 				code.Add("// Local to compilation unit");
 
 				code.AddRange(
-					GenerateFunction(allTags, IDToIndex, current, 0));
+					GenerateFunction(
+						allTags,
+						IDToIndex,
+						unit.root,
+						allCUs,
+						child,
+						0));
 			} break;
 			case TagType.GlobalVar:
 			{
-				if(staticMembers.Contains(current))
+				if(staticMembers.Contains(child))
 					continue;
 
 				if(current.comment != null)
@@ -93,7 +117,9 @@ public partial class CWriter
 				(string part1, string part2) = GetType(
 					allTags,
 					IDToIndex,
-					current);
+					unit.root,
+					allCUs,
+					child);
 
 				string line = string.Format(
 					"{0}{1}{2};",
@@ -117,7 +143,9 @@ public partial class CWriter
 				(string part1, string part2) = GetType(
 					allTags,
 					IDToIndex,
-					current);
+					unit.root,
+					allCUs,
+					child);
 
 				string line = string.Format(
 					"static {0}{1}{2};",
@@ -155,48 +183,61 @@ public partial class CWriter
 
 	private static List<string> TagDispatcher(
 		List<Tag> allTags,
-		List<Tag> memberFuncs,
+		List<Node> memberFuncs,
 		Dictionary<int, int> IDToIndex,
-		Tag current,
+		Node CU,
+		List<Node> allCUs,
+		Node current,
 		int depth)
 	{
 		List<string> code = new();
 
-		switch(current.tagType)
+		switch(current.tag.tagType)
 		{
 		case TagType.Class:
-			// Parse class
+		{
 			code.AddRange(
 				GenerateClassStruct(
 					true,
 					allTags,
 					memberFuncs,
 					IDToIndex,
+					CU,
+					allCUs,
 					current,
 					depth));
-		break;
+		} break;
 		case TagType.Struct:
-			// Parse struct
+		{
 			code.AddRange(
 				GenerateClassStruct(
 					false,
 					allTags,
 					memberFuncs,
 					IDToIndex,
+					CU,
+					allCUs,
 					current,
 					depth));
-		break;
+		} break;
 		case TagType.Union:
-			// Parse union
-			code.AddRange(GenerateUnion(allTags, IDToIndex, current, depth));
-		break;
+		{
+			code.AddRange(
+				GenerateUnion(allTags, IDToIndex, CU, allCUs, current, depth));
+		} break;
 		case TagType.Enum:
-			code.AddRange(GenerateEnum(allTags, IDToIndex, current, depth));
+			code.AddRange(GenerateEnum(allTags, IDToIndex, current.tag, depth));
 		break;
 		case TagType.MemberFunc:
 		{
 			code.AddRange(
-				GenerateMemberFunction(allTags, IDToIndex, current, depth));
+				GenerateMemberFunction(
+					allTags,
+					IDToIndex,
+					CU,
+					allCUs,
+					current,
+					depth));
 		} break;
 		}
 

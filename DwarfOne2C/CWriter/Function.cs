@@ -7,9 +7,13 @@ public partial class CWriter
 	private static List<string> GenerateFunction(
 		List<Tag> allTags,
 		Dictionary<int, int> IDToIndex,
-		Tag current,
+		Node CU,
+		List<Node> allCUs,
+		Node functionNode,
 		int depth)
 	{
+		Tag current = functionNode.tag;
+
 		List<string> code = new();
 
 		string tabs = new('\t', depth);
@@ -17,7 +21,12 @@ public partial class CWriter
 		if(current.comment != null)
 			code.Add(tabs + "// " + current.comment);
 
-		(string part1, string part2) = GetType(allTags, IDToIndex, current);
+		(string part1, string part2) = GetType(
+			allTags,
+			IDToIndex,
+			CU,
+			allCUs,
+			functionNode);
 
 		// E.g. (With function pointer)
 		// static void (*Foo(int))(int, float);
@@ -32,24 +41,29 @@ public partial class CWriter
 
 		bool firstLocal = true;
 
-		if(current.firstChild >= 0)
+		if(functionNode.children.Count > 0)
 		{
 			bool hasParams = false;
 
 			int i = 0;
 
-			for(Tag child = allTags[IDToIndex[current.firstChild]];
-				child.sibling != Tag.NoSibling;
-				child = allTags[IDToIndex[child.sibling]], ++i)
+			foreach(Node childNode in functionNode.children)
 			{
+				Tag child = childNode.tag;
+
 				if(child.name == "this")
 					continue;
 
 				string name = child.name != null
 					? child.name
-					: $"unknown{i}";
+					: $"unknown{i++}";
 
-				(string pPart1, string pPart2) = GetType(allTags, IDToIndex, child);
+				(string pPart1, string pPart2) = GetType(
+					allTags,
+					IDToIndex,
+					CU,
+					allCUs,
+					childNode);
 
 				if(child.tagType == TagType.Param)
 				{
@@ -142,9 +156,13 @@ public partial class CWriter
 	private static List<string> GenerateMemberFunction(
 		List<Tag> allTags,
 		Dictionary<int, int> IDToIndex,
-		Tag current,
+		Node CU,
+		List<Node> allCUs,
+		Node memberFuncNode,
 		int depth)
 	{
+		Tag current = memberFuncNode.tag;
+
 		List<string> code = new();
 
 		string tabs = new('\t', depth);
@@ -152,16 +170,39 @@ public partial class CWriter
 		if(current.comment != null)
 			code.Add(tabs + "// " + current.comment);
 
-		Tag referenced = allTags[IDToIndex[current.typeID]];
+		Node referenced = CU.Find(current.typeID);
+
+		if(referenced == null)
+		{
+			for(int i = 0; i < allCUs.Count; ++i)
+			{
+				Node unit = allCUs[i];
+
+				if(i < allCUs.Count - 2)
+				{
+					Node nextUnit = allCUs[i + 1];
+
+					if(nextUnit.tag.ID < current.typeID)
+						continue;
+				}
+
+				referenced = unit.Find(current.typeID);
+
+				if(referenced != null)
+					break;
+			}
+		}
 
 		// Reforge the tag to generate properly.
-		referenced.tagType = TagType.GlobalFunc;
-		referenced.name = current.name;
+		referenced.tag.tagType = TagType.GlobalFunc;
+		referenced.tag.name = current.name;
 
 		code.AddRange(
 			GenerateFunction(
 				allTags,
 				IDToIndex,
+				CU,
+				allCUs,
 				referenced,
 				depth));
 
